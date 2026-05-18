@@ -1,0 +1,97 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #dbe3ef;
+  background-color: #10161d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  min-height: 100vh;
+  grid-template-rows: auto auto auto 1fr auto;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+p {
+  margin: 0.25rem 0 0;
+  color: #9cb0c7;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.toolbar button,
+.status-row input {
+  border: 1px solid #2e3a4a;
+  border-radius: 0.5rem;
+  background: #161f29;
+  color: #dbe3ef;
+  min-height: 2.5rem;
+  font-size: 0.8rem;
+}
+
+.toolbar button.active {
+  border-color: #62a6ff;
+  color: #62a6ff;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.status-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-row input {
+  width: 5rem;
+  padding: 0 0.5rem;
+}
+
+.pcb-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 60vh;
+  border: 1px solid #2e3a4a;
+  border-radius: 0.75rem;
+  background-color: #0b1117;
+  touch-action: none;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+a {
+  color: #7eb7ff;
+  font-size: 0.8rem;
+  text-decoration: none;
+}

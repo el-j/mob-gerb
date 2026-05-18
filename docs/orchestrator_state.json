@@ -1,0 +1,95 @@
+{
+  "baseBranch": "main",
+  "openTasks": [
+    {
+      "id": "FEAT-001",
+      "title": "Project State and History Model",
+      "path": "docs/backlog/features/FEAT-001_project-state-and-history-model.md",
+      "type": "feature",
+      "status": "ready",
+      "dependencies": ["TEST-001"]
+    },
+    {
+      "id": "FEAT-002",
+      "title": "State-Driven Canvas and Selection",
+      "path": "docs/backlog/features/FEAT-002_state-driven-canvas-and-selection.md",
+      "type": "feature",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-001"]
+    },
+    {
+      "id": "FEAT-003",
+      "title": "Footprint Drawing and Tagging",
+      "path": "docs/backlog/features/FEAT-003_footprint-drawing-and-tagging.md",
+      "type": "feature",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-001", "FEAT-002"]
+    },
+    {
+      "id": "FEAT-004",
+      "title": "Fritzing Import and Part Export",
+      "path": "docs/backlog/features/FEAT-004_fritzing-import-and-part-export.md",
+      "type": "feature",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-001", "FEAT-003"]
+    },
+    {
+      "id": "FEAT-005",
+      "title": "Logical Nets and Airwires",
+      "path": "docs/backlog/features/FEAT-005_logical-nets-and-airwires.md",
+      "type": "feature",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-001", "FEAT-002", "FEAT-004"]
+    },
+    {
+      "id": "FEAT-006",
+      "title": "Autorouter Worker MVP",
+      "path": "docs/backlog/features/FEAT-006_autorouter-worker-mvp.md",
+      "type": "feature",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-001", "FEAT-005"]
+    },
+    {
+      "id": "FEAT-007",
+      "title": "Trace Edit Mode and DRC",
+      "path": "docs/backlog/features/FEAT-007_trace-edit-mode-and-drc.md",
+      "type": "feature",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-002", "FEAT-006"]
+    },
+    {
+      "id": "FEAT-008",
+      "title": "Persistence and Draft I/O",
+      "path": "docs/backlog/features/FEAT-008_persistence-and-draft-io.md",
+      "type": "feature",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-001", "FEAT-003", "FEAT-005"]
+    },
+    {
+      "id": "FEAT-009",
+      "title": "Gerber and Excellon Export",
+      "path": "docs/backlog/features/FEAT-009_gerber-and-excellon-export.md",
+      "type": "feature",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-004", "FEAT-006", "FEAT-007"]
+    },
+    {
+      "id": "TEST-002",
+      "title": "Full Playwright and GitHub Actions",
+      "path": "docs/backlog/tests/TEST-002_full-playwright-and-github-actions.md",
+      "type": "test",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-003", "FEAT-004", "FEAT-006", "FEAT-007", "FEAT-008", "FEAT-009"]
+    }
+  ],
+  "blockedTasks": [],
+  "completedTasks": [
+    {
+      "id": "TEST-001",
+      "title": "Test Foundation and CI Prep",
+      "path": "docs/backlog/tests/TEST-001_test-foundation-and-ci-prep.md",
+      "completedAt": "2026-05-18"
+    }
+  ],
+  "updatedAt": "2026-05-18"
+}

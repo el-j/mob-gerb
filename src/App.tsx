@@ -35,12 +35,8 @@ function App() {
       <PcbCanvas />
 
       <footer>
-        <a href="https://github.com/mongoistkeingemuese/claude-agent-blueprint" target="_blank" rel="noreferrer">
-          Main workflow reference
-        </a>
-        <a href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noreferrer">
-          Special agents reference
-        </a>
+        <span>Workflow: local Claude commands in .claude/commands</span>
+        <span>Backlog: docs/backlog</span>
       </footer>
     </main>
   )

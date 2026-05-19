@@ -1,5 +1,5 @@
 import type { ChangeEventHandler } from 'react'
-import { FileUp, FileDown, Download, FolderOpen, Save, Archive } from 'lucide-react'
+import { FileUp, FileDown, FolderOpen, Save, Archive } from 'lucide-react'
 
 type FileControlsProps = {
   onSvgUpload: ChangeEventHandler<HTMLInputElement>

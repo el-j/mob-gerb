@@ -1,5 +1,6 @@
 import JSZip from 'jszip'
 import type { FootprintProject, ElementState } from '../types/pcb'
+import { getCopperLayers } from '../types/pcb'
 
 const getElementCenter = (el: ElementState): { cx: number; cy: number } => {
   switch (el.type) {
@@ -62,11 +63,6 @@ const renderElementToSvg = (el: ElementState): string => {
 
 export const exportProjectToFritzingSvg = (project: FootprintProject): string => {
   const elements = Object.values(project.elements)
-  
-  const copper0 = elements.filter(e => e.pcbLayer === 'copper0')
-  const copper1 = elements.filter(e => e.pcbLayer === 'copper1')
-  const copper2 = elements.filter(e => e.pcbLayer === 'copper2')
-  const copper3 = elements.filter(e => e.pcbLayer === 'copper3')
   const silkscreen = elements.filter(e => e.pcbLayer === 'silkscreen')
 
   const renderGroup = (el: ElementState) => {
@@ -75,22 +71,37 @@ export const exportProjectToFritzingSvg = (project: FootprintProject): string =>
     return term ? `${main}\n    ${term}` : main
   }
 
+  const count = project.layerCount ?? 2
+  const copperLayers = getCopperLayers(count)
+
+  const renderNestedCopperLayers = (layerIndex: number): string => {
+    if (layerIndex >= copperLayers.length) {
+      return ''
+    }
+    const layerId = copperLayers[layerIndex]
+    const layerElements = elements.filter(e => e.pcbLayer === layerId)
+    
+    const indent = '  '.repeat(layerIndex + 1)
+    const nextIndent = '  '.repeat(layerIndex + 2)
+    const elementsSvg = layerElements.map(renderGroup).join('\n' + nextIndent)
+    
+    const childNesting = renderNestedCopperLayers(layerIndex + 1)
+    
+    let content = elementsSvg
+    if (childNesting) {
+      content = content ? `${content}\n${childNesting}` : childNesting
+    }
+
+    return `${indent}<g id="${layerId}">\n${nextIndent}${content}\n${indent}</g>`
+  }
+
+  const nestedCopper = renderNestedCopperLayers(0)
+
   const svgContent = `<?xml version="1.0" encoding="utf-8"?>
 <svg version="1.2" baseProfile="tiny" id="svg2"
   xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
   viewBox="0 0 100 100">
-  <g id="copper1">
-    ${copper1.map(renderGroup).join('\n    ')}
-    <g id="copper2">
-      ${copper2.map(renderGroup).join('\n      ')}
-      <g id="copper3">
-        ${copper3.map(renderGroup).join('\n        ')}
-        <g id="copper0">
-          ${copper0.map(renderGroup).join('\n          ')}
-        </g>
-      </g>
-    </g>
-  </g>
+${nestedCopper}
   <g id="silkscreen">
     ${silkscreen.map(renderGroup).join('\n    ')}
   </g>
@@ -103,7 +114,7 @@ export const exportProjectToFzpXml = (project: FootprintProject): string => {
   const elements = Object.values(project.elements)
   const connectors = elements.filter(e => e.role === 'connector' && e.connector)
 
-  // Generate XML using simple string interpolation (in production, xmlbuilder is better)
+  // Generate XML using simple string interpolation
   let connectorsXml = ''
   for (const el of connectors) {
     const c = el.connector!
@@ -131,6 +142,11 @@ export const exportProjectToFzpXml = (project: FootprintProject): string => {
     </connector>`
   }
 
+  const count = project.layerCount ?? 2
+  const copperLayers = getCopperLayers(count)
+  let layersXml = copperLayers.map(layerId => `        <layer layerId="${layerId}"/>`).join('\n')
+  layersXml += '\n        <layer layerId="silkscreen"/>'
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <module fritzingVersion="0.9.3b" moduleId="${project.projectId}">
   <version>1</version>
@@ -140,11 +156,7 @@ export const exportProjectToFzpXml = (project: FootprintProject): string => {
   <views>
     <pcbView>
       <layers image="pcb/${project.projectId}.svg">
-        <layer layerId="copper1"/>
-        <layer layerId="copper2"/>
-        <layer layerId="copper3"/>
-        <layer layerId="copper0"/>
-        <layer layerId="silkscreen"/>
+${layersXml}
       </layers>
     </pcbView>
   </views>

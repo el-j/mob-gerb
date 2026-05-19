@@ -9,12 +9,11 @@ import {
   Hexagon,
   Minus,
   ChevronLeft,
-  ChevronRight,
-  Sparkles,
   Tag,
 } from 'lucide-react'
 import { useEditorStore } from '../../store/editorStore'
 import type { ElementState } from '../../core/types/pcb'
+import { getCopperLayers } from '../../core/types/pcb'
 
 export const LayersSidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -23,14 +22,12 @@ export const LayersSidebar: React.FC = () => {
   const [editingElementId, setEditingElementId] = useState<string | null>(null)
   const [editNameValue, setEditNameValue] = useState<string>('')
 
-  const [taggingElementId, setTaggingElementId] = useState<string | null>(null)
-  const [tagPinInput, setTagPinInput] = useState<string>('1')
-  const [tagKind, setTagKind] = useState<'through-hole' | 'smd'>('through-hole')
-
   const elements = useEditorStore((state) => state.project.elements)
   const selectedElementIds = useEditorStore((state) => state.selectedElementIds)
   const hiddenElementIds = useEditorStore((state) => state.hiddenElementIds)
   const hoveredElementId = useEditorStore((state) => state.hoveredElementId)
+  const layerCount = useEditorStore((state) => state.project.layerCount ?? 2)
+  const activeLayer = useEditorStore((state) => state.activeLayer)
 
   const selectElement = useEditorStore((state) => state.selectElement)
   const toggleElementVisibility = useEditorStore((state) => state.toggleElementVisibility)
@@ -39,6 +36,8 @@ export const LayersSidebar: React.FC = () => {
   const setHoveredElementId = useEditorStore((state) => state.setHoveredElementId)
   const upsertElement = useEditorStore((state) => state.upsertElement)
   const commitHistory = useEditorStore((state) => state.commitHistory)
+  const setLayerCount = useEditorStore((state) => state.setLayerCount)
+  const setActiveLayer = useEditorStore((state) => state.setActiveLayer)
 
   const getNextPin = () => {
     const pins = Object.values(elements)
@@ -47,20 +46,62 @@ export const LayersSidebar: React.FC = () => {
     return pins.length > 0 ? Math.max(...pins) + 1 : 1
   }
 
+  const handleUpdatePin = (pin: number) => {
+    const selectedId = selectedElementIds[0]
+    const selectedEl = selectedId ? elements[selectedId] : null
+    if (!selectedEl || !selectedEl.connector) return
+    const kind = selectedEl.connector.kind
+    upsertElement({
+      ...selectedEl,
+      role: 'connector',
+      connector: {
+        kind,
+        pin,
+        connectorId: `connector${pin - 1}`,
+        svgId: kind === 'through-hole' ? `connector${pin - 1}pin` : `connector${pin - 1}pad`,
+      },
+    })
+    commitHistory()
+  }
+
+  const handleUpdateConnectorKind = (kind: 'through-hole' | 'smd') => {
+    const selectedId = selectedElementIds[0]
+    const selectedEl = selectedId ? elements[selectedId] : null
+    if (!selectedEl) return
+    const pin = selectedEl.connector?.pin ?? getNextPin()
+    upsertElement({
+      ...selectedEl,
+      role: 'connector',
+      pcbLayer: kind === 'through-hole' ? 'copper0' : (selectedEl.pcbLayer === 'silkscreen' ? 'copper1' : selectedEl.pcbLayer),
+      connector: {
+        kind,
+        pin,
+        connectorId: `connector${pin - 1}`,
+        svgId: kind === 'through-hole' ? `connector${pin - 1}pin` : `connector${pin - 1}pad`,
+      },
+    })
+    commitHistory()
+  }
+
+  const handleRemoveTag = () => {
+    const selectedId = selectedElementIds[0]
+    const selectedEl = selectedId ? elements[selectedId] : null
+    if (!selectedEl) return
+    const { connector, ...rest } = selectedEl
+    upsertElement({
+      ...rest,
+      role: selectedEl.pcbLayer === 'silkscreen' ? 'silkscreen' : 'unassigned',
+    })
+    commitHistory()
+  }
+
   const elementList = Object.values(elements)
 
-  // Categorize elements
-  const copper1 = elementList.filter((el) => el.pcbLayer === 'copper1')
-  const copper0 = elementList.filter((el) => el.pcbLayer === 'copper0')
-  const copper2 = elementList.filter((el) => el.pcbLayer === 'copper2')
-  const copper3 = elementList.filter((el) => el.pcbLayer === 'copper3')
+  const copperLayers = getCopperLayers(layerCount)
   const silkscreen = elementList.filter((el) => el.pcbLayer === 'silkscreen')
   const other = elementList.filter(
     (el) =>
-      el.pcbLayer !== 'copper1' &&
-      el.pcbLayer !== 'copper0' &&
-      el.pcbLayer !== 'copper2' &&
-      el.pcbLayer !== 'copper3' &&
+      !copperLayers.includes(el.pcbLayer) &&
       el.pcbLayer !== 'silkscreen'
   )
 
@@ -88,7 +129,7 @@ export const LayersSidebar: React.FC = () => {
     e.dataTransfer.dropEffect = 'move'
   }
 
-  const handleDrop = (e: React.DragEvent, targetLayer: 'copper1' | 'copper0' | 'copper2' | 'copper3' | 'silkscreen') => {
+  const handleDrop = (e: React.DragEvent, targetLayer: string) => {
     e.preventDefault()
     const id = e.dataTransfer.getData('text/plain')
     if (!id) return
@@ -164,15 +205,22 @@ export const LayersSidebar: React.FC = () => {
           <div className="element-actions" onClick={(e) => e.stopPropagation()}>
             {!el.connector && el.role !== 'silkscreen' && (
               <button
-                className={`action-btn tag-btn ${taggingElementId === el.id ? 'active-tagging' : ''}`}
+                className="action-btn tag-btn"
                 onClick={() => {
-                  if (taggingElementId === el.id) {
-                    setTaggingElementId(null)
-                  } else {
-                    setTaggingElementId(el.id)
-                    setTagPinInput(String(getNextPin()))
-                    setTagKind(el.pcbLayer === 'copper0' ? 'through-hole' : 'smd')
-                  }
+                  selectElement(el.id)
+                  const pin = getNextPin()
+                  const kind = el.pcbLayer === 'copper0' ? 'through-hole' : 'smd'
+                  upsertElement({
+                    ...el,
+                    role: 'connector',
+                    connector: {
+                      kind,
+                      pin,
+                      connectorId: `connector${pin - 1}`,
+                      svgId: kind === 'through-hole' ? `connector${pin - 1}pin` : `connector${pin - 1}pad`,
+                    },
+                  })
+                  commitHistory()
                 }}
                 title="Tag as connector"
                 aria-label="Tag as connector"
@@ -198,70 +246,6 @@ export const LayersSidebar: React.FC = () => {
             </button>
           </div>
         </div>
-
-        {taggingElementId === el.id && (
-          <div className="sidebar-inline-tagger" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-1.5 p-1.5 bg-[#1b1c21]/90 rounded border border-neutral-700/40 text-xs text-neutral-300">
-              <span className="text-[10px] text-neutral-400 uppercase tracking-wider font-semibold">Pin</span>
-              <input
-                type="number"
-                min="1"
-                step="1"
-                className="w-10 px-1 text-center bg-neutral-900 border border-neutral-700 rounded text-xs text-neutral-100 focus:outline-none focus:border-amber-500"
-                value={tagPinInput}
-                onChange={(e) => setTagPinInput(e.target.value)}
-              />
-              <div className="flex bg-neutral-800 p-0.5 rounded border border-neutral-700/30">
-                <button
-                  type="button"
-                  className={`px-1.5 py-0.5 rounded-sm text-[9px] font-bold transition-all ${
-                    tagKind === 'through-hole'
-                      ? 'bg-amber-600/90 text-white shadow-sm'
-                      : 'text-neutral-400 hover:text-neutral-200'
-                  }`}
-                  onClick={() => setTagKind('through-hole')}
-                >
-                  THT
-                </button>
-                <button
-                  type="button"
-                  className={`px-1.5 py-0.5 rounded-sm text-[9px] font-bold transition-all ${
-                    tagKind === 'smd'
-                      ? 'bg-cyan-600/90 text-white shadow-sm'
-                      : 'text-neutral-400 hover:text-neutral-200'
-                  }`}
-                  onClick={() => setTagKind('smd')}
-                >
-                  SMD
-                </button>
-              </div>
-              <button
-                type="button"
-                className="ml-auto bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer"
-                onClick={() => {
-                  const pin = Number(tagPinInput)
-                  if (Number.isFinite(pin) && pin > 0) {
-                    upsertElement({
-                      ...el,
-                      role: 'connector',
-                      pcbLayer: tagKind === 'through-hole' ? 'copper0' : (el.pcbLayer === 'silkscreen' ? 'copper1' : el.pcbLayer),
-                      connector: {
-                        kind: tagKind,
-                        pin,
-                        connectorId: `connector${pin - 1}`,
-                        svgId: tagKind === 'through-hole' ? `connector${pin - 1}pin` : `connector${pin - 1}pad`,
-                      },
-                    })
-                    commitHistory()
-                    setTaggingElementId(null)
-                  }
-                }}
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     )
   }
@@ -285,102 +269,152 @@ export const LayersSidebar: React.FC = () => {
             <h2 className="sidebar-title">Layers & Items</h2>
           </div>
 
+          {/* Premium Layer Config Dashboard */}
+          <div className="px-3 pb-3 border-b border-white/5 flex flex-col gap-2.5 text-[11px] bg-slate-900/40">
+            {/* Pair-wise Layer Count Controller */}
+            <div className="flex flex-col gap-1">
+              <span className="text-slate-400 font-medium flex items-center gap-1">
+                <Layers size={10} className="text-amber-500" />
+                Board Copper Layers
+              </span>
+              <div className="grid grid-cols-3 gap-1 bg-slate-950/65 p-0.5 rounded-md border border-white/5">
+                {[2, 4, 6].map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    onClick={() => setLayerCount(count)}
+                    className={`py-1 rounded text-center font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                      layerCount === count
+                        ? 'bg-amber-500 text-slate-950 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                    }`}
+                  >
+                    <Layers size={10} />
+                    <span>{count} Layers</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Active Drawing Layer Selector */}
+            <div className="flex flex-col gap-1">
+              <span className="text-slate-400 font-medium">Active Drawing Layer</span>
+              <div className="flex flex-wrap gap-1">
+                {copperLayers.map((layerId) => {
+                  let label = layerId
+                  let btnClass = 'border-white/5 bg-slate-950/20 text-slate-400 hover:border-slate-750'
+                  let dotColor = '#da8a3a' // copper1
+
+                  if (layerId === 'copper1') {
+                    label = 'Top (copper1)'
+                    if (activeLayer === 'copper1') btnClass = 'bg-orange-500/20 border-orange-500 text-orange-400'
+                  } else if (layerId === 'copper0') {
+                    label = 'Bottom (copper0)'
+                    dotColor = '#8f3d03'
+                    if (activeLayer === 'copper0') btnClass = 'bg-amber-800/20 border-amber-700 text-amber-400'
+                  } else {
+                    const match = layerId.match(/^copper(\d+)$/)
+                    const num = match ? parseInt(match[1], 10) : 0
+                    label = `Inner ${num - 1} (${layerId})`
+                    
+                    const hues = [280, 320, 210, 150, 45, 100, 180, 250, 300, 350]
+                    const hue = hues[(num - 2) % hues.length]
+                    dotColor = `hsl(${hue}, 85%, 65%)`
+
+                    const isOddInner = num % 2 === 0
+                    if (activeLayer === layerId) {
+                      btnClass = isOddInner
+                        ? 'bg-purple-500/20 border-purple-500 text-purple-400'
+                        : 'bg-pink-500/20 border-pink-500 text-pink-400'
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={layerId}
+                      type="button"
+                      onClick={() => setActiveLayer(layerId)}
+                      className={`px-2 py-1 rounded border text-[10px] font-semibold transition-all flex items-center gap-1.5 ${btnClass}`}
+                    >
+                      <span className="w-2 h-2 rounded-full inline-block border border-white/10" style={{ backgroundColor: dotColor }} />
+                      {label}
+                    </button>
+                  )
+                })}
+
+                {/* Silkscreen */}
+                <button
+                  type="button"
+                  onClick={() => setActiveLayer('silkscreen')}
+                  className={`px-2 py-1 rounded border text-[10px] font-semibold transition-all flex items-center gap-1.5 ${
+                    activeLayer === 'silkscreen'
+                      ? 'bg-white/20 border-white text-white'
+                      : 'border-white/5 bg-slate-950/20 text-slate-400 hover:border-slate-750'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full inline-block bg-white border border-white/10" />
+                  Silkscreen
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="sidebar-sections-scroller">
-            {/* Top Copper Layer Section */}
-            <div
-              className={`sidebar-section ${dragOverLayer === 'copper1' ? 'drag-over' : ''}`}
-              onDragOver={handleDragOver}
-              onDragEnter={() => setDragOverLayer('copper1')}
-              onDragLeave={() => setDragOverLayer(null)}
-              onDrop={(e) => {
-                handleDrop(e, 'copper1')
-                setDragOverLayer(null)
-              }}
-            >
-              <div className="section-title copper1-header">
-                <span>Top Copper (copper1)</span>
-                <span className="section-count">{copper1.length}</span>
-              </div>
-              <div className="section-items">
-                {copper1.length === 0 ? (
-                  <div className="empty-section-placeholder">No top copper items</div>
-                ) : (
-                  copper1.map(renderElementRow)
-                )}
-              </div>
-            </div>
+            {/* Copper Layers Sections (Dynamic) */}
+            {copperLayers.map((layerId) => {
+              const layerEls = elementList.filter((el) => el.pcbLayer === layerId)
+              
+              let label = layerId
+              let headerClass = 'copper-header font-semibold text-slate-200 border-b border-white/5 pb-1 mb-1'
+              let emptyPlaceholder = `No items on ${layerId}`
+              
+              if (layerId === 'copper1') {
+                label = 'Top Copper (copper1)'
+                headerClass = 'copper1-header'
+                emptyPlaceholder = 'No top copper items'
+              } else if (layerId === 'copper0') {
+                label = 'Bottom Copper (copper0)'
+                headerClass = 'copper0-header'
+                emptyPlaceholder = 'No bottom copper items'
+              } else {
+                const match = layerId.match(/^copper(\d+)$/)
+                const num = match ? parseInt(match[1], 10) : 0
+                label = `Inner Copper ${num - 1} (${layerId})`
+                
+                const isOddInner = num % 2 === 0
+                headerClass = isOddInner
+                  ? 'copper-inner-odd flex justify-between items-center text-purple-400 font-semibold border-b border-purple-500/20 pb-1 mb-1'
+                  : 'copper-inner-even flex justify-between items-center text-pink-400 font-semibold border-b border-pink-500/20 pb-1 mb-1'
+                
+                emptyPlaceholder = `No inner ${num - 1} copper items`
+              }
 
-            {/* Inner Copper 1 (copper2) Section */}
-            <div
-              className={`sidebar-section ${dragOverLayer === 'copper2' ? 'drag-over' : ''}`}
-              onDragOver={handleDragOver}
-              onDragEnter={() => setDragOverLayer('copper2')}
-              onDragLeave={() => setDragOverLayer(null)}
-              onDrop={(e) => {
-                handleDrop(e, 'copper2')
-                setDragOverLayer(null)
-              }}
-            >
-              <div className="section-title copper2-header flex justify-between items-center text-purple-400 font-semibold border-b border-purple-500/20 pb-1 mb-1">
-                <span>Inner Copper 1 (copper2)</span>
-                <span className="section-count px-1.5 py-0.2 bg-purple-500/20 rounded text-[10px]">{copper2.length}</span>
-              </div>
-              <div className="section-items">
-                {copper2.length === 0 ? (
-                  <div className="empty-section-placeholder text-purple-400/40 text-[10px] italic p-1">No inner 1 copper items</div>
-                ) : (
-                  copper2.map(renderElementRow)
-                )}
-              </div>
-            </div>
-
-            {/* Inner Copper 2 (copper3) Section */}
-            <div
-              className={`sidebar-section ${dragOverLayer === 'copper3' ? 'drag-over' : ''}`}
-              onDragOver={handleDragOver}
-              onDragEnter={() => setDragOverLayer('copper3')}
-              onDragLeave={() => setDragOverLayer(null)}
-              onDrop={(e) => {
-                handleDrop(e, 'copper3')
-                setDragOverLayer(null)
-              }}
-            >
-              <div className="section-title copper3-header flex justify-between items-center text-pink-400 font-semibold border-b border-pink-500/20 pb-1 mb-1">
-                <span>Inner Copper 2 (copper3)</span>
-                <span className="section-count px-1.5 py-0.2 bg-pink-500/20 rounded text-[10px]">{copper3.length}</span>
-              </div>
-              <div className="section-items">
-                {copper3.length === 0 ? (
-                  <div className="empty-section-placeholder text-pink-400/40 text-[10px] italic p-1">No inner 2 copper items</div>
-                ) : (
-                  copper3.map(renderElementRow)
-                )}
-              </div>
-            </div>
-
-            {/* Bottom Copper Layer Section */}
-            <div
-              className={`sidebar-section ${dragOverLayer === 'copper0' ? 'drag-over' : ''}`}
-              onDragOver={handleDragOver}
-              onDragEnter={() => setDragOverLayer('copper0')}
-              onDragLeave={() => setDragOverLayer(null)}
-              onDrop={(e) => {
-                handleDrop(e, 'copper0')
-                setDragOverLayer(null)
-              }}
-            >
-              <div className="section-title copper0-header">
-                <span>Bottom Copper (copper0)</span>
-                <span className="section-count">{copper0.length}</span>
-              </div>
-              <div className="section-items">
-                {copper0.length === 0 ? (
-                  <div className="empty-section-placeholder">No bottom copper items</div>
-                ) : (
-                  copper0.map(renderElementRow)
-                )}
-              </div>
-            </div>
+              return (
+                <div
+                  key={layerId}
+                  className={`sidebar-section ${dragOverLayer === layerId ? 'drag-over' : ''}`}
+                  onDragOver={handleDragOver}
+                  onDragEnter={() => setDragOverLayer(layerId)}
+                  onDragLeave={() => setDragOverLayer(null)}
+                  onDrop={(e) => {
+                    handleDrop(e, layerId)
+                    setDragOverLayer(null)
+                  }}
+                >
+                  <div className={`section-title ${headerClass}`}>
+                    <span>{label}</span>
+                    <span className="section-count">{layerEls.length}</span>
+                  </div>
+                  <div className="section-items">
+                    {layerEls.length === 0 ? (
+                      <div className="empty-section-placeholder">{emptyPlaceholder}</div>
+                    ) : (
+                      layerEls.map(renderElementRow)
+                    )}
+                  </div>
+                </div>
+              )
+            })}
 
             {/* Silkscreen Layer Section */}
             <div
@@ -419,6 +453,136 @@ export const LayersSidebar: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Selected Item Properties Panel */}
+          {(() => {
+            const selectedId = selectedElementIds[0]
+            const selectedEl = selectedId ? elements[selectedId] : null
+            if (!selectedEl) return null
+
+            const isConnector = !!selectedEl.connector
+            const pinVal = selectedEl.connector?.pin ?? 1
+            const kindVal = selectedEl.connector?.kind ?? 'through-hole'
+
+            return (
+              <div className="sidebar-properties-card bg-slate-900/80 border-t border-white/10 p-3 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-300 pb-1.5 border-b border-white/5">
+                  <div className="flex items-center gap-1.5">
+                    {getShapeIcon(selectedEl.type)}
+                    <span className="uppercase tracking-wider text-[10px] text-slate-400 font-bold">Item Properties</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => selectElement('')}
+                    className="text-slate-500 hover:text-slate-300 text-[10px] cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+
+                {/* Name Editing Row */}
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] text-slate-400 font-medium">Element Name</span>
+                  <input
+                    type="text"
+                    className="px-2 py-1 text-xs bg-slate-950 border border-white/10 rounded-md text-slate-200 focus:outline-none focus:border-amber-500 transition-colors"
+                    value={selectedEl.name || ''}
+                    placeholder={selectedEl.id}
+                    onChange={(e) => renameElement(selectedEl.id, e.target.value)}
+                  />
+                </div>
+
+                {/* Layer indicator */}
+                <div className="flex justify-between items-center text-[10px] text-slate-400 px-0.5">
+                  <span>Layer:</span>
+                  <span className="font-semibold text-slate-200 capitalize">{selectedEl.pcbLayer}</span>
+                </div>
+
+                {/* Connector/Pin editing */}
+                {isConnector ? (
+                  <div className="flex flex-col gap-2 bg-slate-950/40 p-2 rounded-lg border border-white/5 mt-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
+                        <Tag size={10} className="text-amber-500" />
+                        CONNECTOR PIN
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveTag}
+                        className="text-red-400/80 hover:text-red-500 text-[10px] font-semibold transition-colors flex items-center gap-0.5 cursor-pointer"
+                        title="Remove connector tagging"
+                      >
+                        <Trash2 size={10} />
+                        Untag
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-0.5 flex-1">
+                        <span className="text-[9px] text-slate-500">Pin Number</span>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          className="w-full px-2 py-1 text-xs bg-slate-950 border border-white/10 rounded-md text-slate-200 focus:outline-none focus:border-amber-500"
+                          value={pinVal}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10)
+                            if (Number.isFinite(val) && val > 0) {
+                              handleUpdatePin(val)
+                            }
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-0.5 flex-1">
+                        <span className="text-[9px] text-slate-500">Connection Kind</span>
+                        <div className="flex bg-slate-950 p-0.5 rounded-md border border-white/10">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateConnectorKind('through-hole')}
+                            className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-[9px] font-bold transition-all ${
+                              kindVal === 'through-hole'
+                                ? 'bg-amber-500 text-slate-950 shadow-sm'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                            title="Through-Hole: drills through all layers"
+                          >
+                            <Circle size={8} className={kindVal === 'through-hole' ? 'fill-slate-950' : ''} />
+                            THT
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateConnectorKind('smd')}
+                            className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-[9px] font-bold transition-all ${
+                              kindVal === 'smd'
+                                ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                            title="Surface Mount: sits on a single layer"
+                          >
+                            <Square size={8} className={kindVal === 'smd' ? 'fill-slate-950' : ''} />
+                            SMD
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  selectedEl.role !== 'silkscreen' && (
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateConnectorKind('through-hole')}
+                      className="mt-1 w-full py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                    >
+                      <Tag size={12} />
+                      Tag as PCB Connector Pin
+                    </button>
+                  )
+                )}
+              </div>
+            )
+          })()}
         </div>
       )}
     </div>

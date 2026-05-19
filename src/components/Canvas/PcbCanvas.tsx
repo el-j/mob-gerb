@@ -3,6 +3,7 @@ import { type PointerEvent, type WheelEvent, type MouseEvent, useEffect, useRef,
 import { boundsFromElement } from '../../core/math/geometry'
 import { snapCoordinate } from '../../core/math/coordinates'
 import type { Coordinate, ElementState } from '../../core/types/pcb'
+import { getCopperLayers } from '../../core/types/pcb'
 import { useEditorStore } from '../../store/editorStore'
 
 type PanPointer = {
@@ -36,20 +37,19 @@ const elementStroke = (element: ElementState): string => {
     return '#91a1b6'
   }
 
-  switch (element.pcbLayer) {
-    case 'copper1':
-      return '#da8a3a'
-    case 'copper0':
-      return '#8f3d03'
-    case 'copper2':
-      return '#a855f7'
-    case 'copper3':
-      return '#ec4899'
-    case 'silkscreen':
-      return '#ffffff'
-    default:
-      return '#91a1b6'
+  const layer = element.pcbLayer
+  if (layer === 'copper1') return '#da8a3a'
+  if (layer === 'copper0') return '#8f3d03'
+  if (layer === 'silkscreen') return '#ffffff'
+
+  const match = layer.match(/^copper(\d+)$/)
+  if (match) {
+    const num = parseInt(match[1], 10)
+    const hues = [280, 320, 210, 150, 45, 100, 180, 250, 300, 350]
+    const hue = hues[(num - 2) % hues.length]
+    return `hsl(${hue}, 85%, 65%)`
   }
+  return '#91a1b6'
 }
 
 const elementFill = (element: ElementState, selected: boolean): string => {
@@ -64,18 +64,18 @@ const elementFill = (element: ElementState, selected: boolean): string => {
     return 'transparent'
   }
 
-  switch (element.pcbLayer) {
-    case 'copper1':
-      return 'rgba(218, 138, 58, 0.22)'
-    case 'copper0':
-      return 'rgba(143, 61, 3, 0.22)'
-    case 'copper2':
-      return 'rgba(168, 85, 247, 0.22)'
-    case 'copper3':
-      return 'rgba(236, 72, 153, 0.22)'
-    default:
-      return 'rgba(255, 255, 255, 0.1)'
+  const layer = element.pcbLayer
+  if (layer === 'copper1') return 'rgba(218, 138, 58, 0.22)'
+  if (layer === 'copper0') return 'rgba(143, 61, 3, 0.22)'
+
+  const match = layer.match(/^copper(\d+)$/)
+  if (match) {
+    const num = parseInt(match[1], 10)
+    const hues = [280, 320, 210, 150, 45, 100, 180, 250, 300, 350]
+    const hue = hues[(num - 2) % hues.length]
+    return `hsla(${hue}, 85%, 65%, 0.22)`
   }
+  return 'rgba(255, 255, 255, 0.1)'
 }
 
 const outlineStroke = '#ffffff'
@@ -85,7 +85,8 @@ export const PcbCanvas = () => {
   const pan = useEditorStore((state) => state.pan)
   const zoom = useEditorStore((state) => state.zoom)
   const gridSize = useEditorStore((state) => state.gridSize)
-  const elements = useEditorStore((state) => state.project.elements)
+  const project = useEditorStore((state) => state.project)
+  const elements = project.elements
   const selectedElementId = useEditorStore((state) => state.selectedElementId)
   const selectedElementIds = useEditorStore((state) => state.selectedElementIds)
   const drawTool = useEditorStore((state) => state.drawTool)
@@ -1008,10 +1009,35 @@ export const PcbCanvas = () => {
 
   const visibleElements = Object.values(elements).filter((element) => !hiddenElementIds.includes(element.id))
 
-  const copper0Elements = visibleElements.filter((element) => element.pcbLayer === 'copper0')
-  const copper1Elements = visibleElements.filter((element) => element.pcbLayer === 'copper1')
   const silkscreenElements = visibleElements.filter((element) => element.pcbLayer === 'silkscreen')
   const groupElements = visibleElements.filter((element) => element.type === 'group')
+
+  const count = project.layerCount ?? 2
+  const copperLayers = getCopperLayers(count)
+
+  const renderNestedCopperLayers = (layerIndex: number): React.ReactNode => {
+    if (layerIndex >= copperLayers.length) {
+      return null
+    }
+    const layerId = copperLayers[layerIndex]
+    
+    // THT connectors are drawn on all copper layers
+    const layerElements = visibleElements.filter((element) => {
+      if (element.role === 'connector' && element.connector?.kind === 'through-hole') {
+        return copperLayers.includes(element.pcbLayer)
+      }
+      return element.pcbLayer === layerId
+    })
+
+    const childNesting = renderNestedCopperLayers(layerIndex + 1)
+
+    return (
+      <g id={layerId} key={layerId}>
+        {layerElements.map(renderElement)}
+        {childNesting}
+      </g>
+    )
+  }
 
   const handleWheel = (event: WheelEvent<SVGSVGElement>) => {
     event.preventDefault()
@@ -1056,12 +1082,7 @@ export const PcbCanvas = () => {
             fill="url(#grid)"
             pointerEvents="none"
           />
-          <g id="copper1">
-            {copper1Elements.map(renderElement)}
-            <g id="copper0">
-              {copper0Elements.map(renderElement)}
-            </g>
-          </g>
+          {renderNestedCopperLayers(0)}
           <g id="silkscreen">
             {silkscreenElements.map(renderElement)}
           </g>

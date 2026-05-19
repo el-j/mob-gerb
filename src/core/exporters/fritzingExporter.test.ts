@@ -2,12 +2,13 @@ import { describe, it, expect } from 'vitest'
 import { exportProjectToFritzingSvg, exportProjectToFzpXml } from './fritzingExporter'
 import type { FootprintProject, ElementState } from '../types/pcb'
 
-function makeProject(elements: ElementState[]): FootprintProject {
+function makeProject(elements: ElementState[], layerCount = 4): FootprintProject {
   return {
     projectId: 'test-part',
     lastModified: 0,
     metadata: { name: 'Test Component', author: 'tester' },
     gridSize: 2.54,
+    layerCount,
     elements: Object.fromEntries(elements.map((e) => [e.id, e])),
     nets: {},
   }
@@ -60,5 +61,37 @@ describe('fritzingExporter', () => {
     
     // Check terminal rect node
     expect(svg).toContain('<rect id="connector0terminal" x="9.9995" y="9.9995" width="0.001" height="0.001"')
+  })
+
+  it('exports dynamic SVG with nested 2-layer and 6-layer copper groups correctly', () => {
+    const pin: ElementState = {
+      id: 'circle-pin-1',
+      type: 'circle',
+      role: 'connector',
+      pcbLayer: 'copper1',
+      geom: { x: 10, y: 10, r: 1.5 },
+      connector: {
+        kind: 'through-hole',
+        pin: 1,
+        connectorId: 'connector0',
+        svgId: 'connector0pin',
+      },
+    }
+
+    // 2-layer test
+    const svg2 = exportProjectToFritzingSvg(makeProject([pin], 2))
+    expect(svg2).toContain('<g id="copper1">')
+    expect(svg2).not.toContain('<g id="copper2">')
+    expect(svg2).not.toContain('<g id="copper3">')
+    expect(svg2).toContain('<g id="copper0">')
+
+    // 6-layer test
+    const svg6 = exportProjectToFritzingSvg(makeProject([pin], 6))
+    expect(svg6).toContain('<g id="copper1">')
+    expect(svg6).toContain('<g id="copper2">')
+    expect(svg6).toContain('<g id="copper3">')
+    expect(svg6).toContain('<g id="copper4">')
+    expect(svg6).toContain('<g id="copper5">')
+    expect(svg6).toContain('<g id="copper0">')
   })
 })

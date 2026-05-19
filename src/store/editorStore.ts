@@ -10,6 +10,7 @@ import type {
   ElementType,
   FootprintProject,
   ProjectMetadata,
+  PcbLayer,
 } from '../core/types/pcb'
 import { runDrc as runDrcEngine } from '../core/drc/drcEngine'
 import type { DrcViolation } from '../core/drc/drcEngine'
@@ -48,6 +49,9 @@ export type EditorState = {
   historyFuture: HistorySnapshot[]
   hoveredElementId: string | null
   hiddenElementIds: string[]
+  activeLayer: PcbLayer
+  setLayerCount: (count: number) => void
+  setActiveLayer: (layer: PcbLayer) => void
   setHoveredElementId: (id: string | null) => void
   toggleElementVisibility: (id: string) => void
   deleteElement: (id: string) => void
@@ -127,6 +131,7 @@ const createInitialProject = (): FootprintProject => ({
     author: '',
   },
   gridSize: DEFAULT_GRID_SIZE,
+  layerCount: 2,
   elements: {
     connector0pin: {
       id: 'connector0pin',
@@ -258,13 +263,16 @@ const recomputeGroupGeometry = (
   }
 }
 
-const createShapeElement = (type: ElementType, id: string): ElementState => {
+const createShapeElement = (type: ElementType, id: string, activeLayer: PcbLayer): ElementState => {
+  const isSilkscreen = activeLayer === 'silkscreen'
+  const role = isSilkscreen ? 'silkscreen' : (type === 'polygon' ? 'copper-surface' : 'unassigned')
+
   if (type === 'circle') {
     return {
       id,
       type,
-      role: 'unassigned',
-      pcbLayer: 'silkscreen',
+      role,
+      pcbLayer: activeLayer,
       groupId: null,
       geom: { x: 60, y: 60, r: 1.5, filled: false, strokeWidth: 0.55 },
     }
@@ -274,8 +282,8 @@ const createShapeElement = (type: ElementType, id: string): ElementState => {
     return {
       id,
       type,
-      role: 'unassigned',
-      pcbLayer: 'silkscreen',
+      role,
+      pcbLayer: activeLayer,
       groupId: null,
       geom: { x: 56, y: 56, w: 8, h: 8, filled: false, strokeWidth: 0.35 },
     }
@@ -285,8 +293,8 @@ const createShapeElement = (type: ElementType, id: string): ElementState => {
     return {
       id,
       type,
-      role: 'copper-surface',
-      pcbLayer: 'copper1',
+      role,
+      pcbLayer: activeLayer,
       groupId: null,
       geom: {
         x: 48,
@@ -308,25 +316,28 @@ const createShapeElement = (type: ElementType, id: string): ElementState => {
   return {
     id,
     type,
-    role: 'unassigned',
-    pcbLayer: 'silkscreen',
+    role,
+    pcbLayer: activeLayer,
     groupId: null,
     geom: { x: 54, y: 60, w: 12, h: 0, strokeWidth: 0.5 },
   }
 }
 
-const createPolylineElement = (id: string, points: Coordinate[]): ElementState => {
+const createPolylineElement = (id: string, points: Coordinate[], activeLayer: PcbLayer): ElementState => {
   const origin = points[0]
   const relativePoints = points.map((point) => ({
     x: point.x - origin.x,
     y: point.y - origin.y,
   }))
 
+  const isSilkscreen = activeLayer === 'silkscreen'
+  const role = isSilkscreen ? 'silkscreen' : 'unassigned'
+
   return {
     id,
     type: 'polyline',
-    role: 'unassigned',
-    pcbLayer: 'silkscreen',
+    role,
+    pcbLayer: activeLayer,
     groupId: null,
     geom: {
       x: origin.x,
@@ -359,6 +370,20 @@ export const useEditorStore = create<EditorState>((set) => ({
   historyFuture: [],
   hoveredElementId: null,
   hiddenElementIds: [],
+  activeLayer: 'copper1',
+  setLayerCount: (count) =>
+    set((state) => {
+      const snapshot = createSnapshot(state)
+      return {
+        project: withTouchedProject({
+          ...state.project,
+          layerCount: count,
+        }),
+        historyPast: [...state.historyPast.slice(-MAX_HISTORY_SIZE + 1), snapshot],
+        historyFuture: [],
+      }
+    }),
+  setActiveLayer: (layer) => set({ activeLayer: layer }),
   setHoveredElementId: (id) => set({ hoveredElementId: id }),
   toggleElementVisibility: (id) =>
     set((state) => ({
@@ -490,7 +515,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   addShape: (type) =>
     set((state) => {
       const id = nextShapeId(state.project.elements)
-      const newElement = createShapeElement(type, id)
+      const newElement = createShapeElement(type, id, state.activeLayer)
 
       return {
         project: withTouchedProject({
@@ -1004,7 +1029,7 @@ export const useEditorStore = create<EditorState>((set) => ({
       }
 
       const id = nextShapeId(state.project.elements)
-      const polyline = createPolylineElement(id, state.draftPoints)
+      const polyline = createPolylineElement(id, state.draftPoints, state.activeLayer)
 
       return {
         project: withTouchedProject({

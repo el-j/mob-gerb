@@ -6,7 +6,16 @@ export type AppMode =
   | 'EDIT_TRACE_MODE'
   | 'PART_CREATOR_MODE'
 
-export type PcbLayer = 'copper0' | 'copper1' | 'copper2' | 'copper3' | 'silkscreen'
+export type PcbLayer = string
+
+export const getCopperLayers = (layerCount: number): PcbLayer[] => {
+  const layers = ['copper1']
+  for (let i = 2; i < layerCount; i++) {
+    layers.push(`copper${i}`)
+  }
+  layers.push('copper0')
+  return layers
+}
 
 export type ElementType = 'rect' | 'circle' | 'line' | 'polygon' | 'polyline' | 'group'
 
@@ -63,6 +72,7 @@ export type FootprintProject = {
   lastModified: number
   metadata: ProjectMetadata
   gridSize: number
+  layerCount?: number
   elements: Record<string, ElementState>
   nets: Record<string, NetState>
 }

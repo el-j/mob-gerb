@@ -381,4 +381,33 @@ describe('editor store project model', () => {
     state.redo()
     expect(useEditorStore.getState().project.elements['shape-1'].name).toBe('Power Pad')
   })
+
+  it('manages active drawing layer and dynamic layer counts correctly', () => {
+    const state = useEditorStore.getState()
+
+    // Default layerCount is 2, active drawing layer is copper1
+    expect(state.project.layerCount).toBe(2)
+    expect(state.activeLayer).toBe('copper1')
+
+    // Change layer count to 4 and activeLayer to copper3 (Inner 2)
+    state.setLayerCount(4)
+    state.setActiveLayer('copper3')
+    
+    let updatedState = useEditorStore.getState()
+    expect(updatedState.project.layerCount).toBe(4)
+    expect(updatedState.activeLayer).toBe('copper3')
+
+    // Add a circle shape element - it should automatically belong to copper3
+    state.addShape('circle')
+    const circle = useEditorStore.getState().project.elements['shape-1']
+    expect(circle.pcbLayer).toBe('copper3')
+    expect(circle.role).toBe('unassigned')
+
+    // Change activeLayer to silkscreen and add a rect
+    state.setActiveLayer('silkscreen')
+    state.addShape('rect')
+    const rect = useEditorStore.getState().project.elements['shape-2']
+    expect(rect.pcbLayer).toBe('silkscreen')
+    expect(rect.role).toBe('silkscreen')
+  })
 })

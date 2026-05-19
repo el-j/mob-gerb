@@ -7,6 +7,7 @@
  */
 
 import type { ElementState, FootprintProject } from '../types/pcb'
+import { getCopperLayers } from '../types/pcb'
 
 // ---------------------------------------------------------------------------
 // Coordinate encoding
@@ -220,24 +221,26 @@ function buildExcellonDrill(holes: DrillHole[]): string {
 // ---------------------------------------------------------------------------
 
 export type GerberOutput = {
-  copper1: string  // .GTL — copper top
-  copper0: string  // .GBL — copper bottom
-  copper2?: string // .G1 — copper inner 1
-  copper3?: string // .G2 — copper inner 2
+  copperLayers: Record<string, string> // e.g. { copper1: '...', copper0: '...' }
   silkscreen: string  // .GTO — silkscreen top
   drill: string  // .DRL — Excellon drill
 }
 
 export function generateGerberOutput(project: FootprintProject): GerberOutput {
   const all = Object.values(project.elements)
-
-  const copper1Els = all.filter((e) => e.pcbLayer === 'copper1')
-  const copper0Els = all.filter((e) => e.pcbLayer === 'copper0')
-  const copper2Els = all.filter((e) => e.pcbLayer === 'copper2')
-  const copper3Els = all.filter((e) => e.pcbLayer === 'copper3')
   const silkscreenEls = all.filter((e) => e.pcbLayer === 'silkscreen')
 
+  const count = project.layerCount ?? 2
+  const copperLayerIds = getCopperLayers(count)
+  
+  const copperLayers: Record<string, string> = {}
+  for (const layerId of copperLayerIds) {
+    const layerEls = all.filter((e) => e.pcbLayer === layerId)
+    copperLayers[layerId] = buildGerberLayer(layerEls, layerId)
+  }
+
   // Through-hole drill: circle connectors with kind === 'through-hole' on copper1
+  const copper1Els = all.filter((e) => e.pcbLayer === 'copper1')
   const drillHoles: DrillHole[] = copper1Els
     .filter(
       (e) =>
@@ -249,10 +252,7 @@ export function generateGerberOutput(project: FootprintProject): GerberOutput {
     .map((e) => ({ x: e.geom.x, y: e.geom.y, diameter: e.geom.r! * 2 }))
 
   return {
-    copper1: buildGerberLayer(copper1Els, 'copper1'),
-    copper0: buildGerberLayer(copper0Els, 'copper0'),
-    copper2: buildGerberLayer(copper2Els, 'copper2'),
-    copper3: buildGerberLayer(copper3Els, 'copper3'),
+    copperLayers,
     silkscreen: buildGerberLayer(silkscreenEls, 'silkscreen'),
     drill: buildExcellonDrill(drillHoles),
   }

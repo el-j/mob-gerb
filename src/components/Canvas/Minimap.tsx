@@ -1,6 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState } from 'react'
 import { useEditorStore } from '../../store/editorStore'
-import type { Coordinate } from '../../core/types/pcb'
 
 const GRID_VIEWBOX_SIZE = 120
 
@@ -8,7 +7,6 @@ export const Minimap: React.FC = () => {
   const elements = useEditorStore((state) => state.project.elements)
   const pan = useEditorStore((state) => state.pan)
   const zoom = useEditorStore((state) => state.zoom)
-  const setMode = useEditorStore((state) => state.setMode)
 
   const minimapRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)

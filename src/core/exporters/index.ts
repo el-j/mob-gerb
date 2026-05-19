@@ -17,13 +17,22 @@ export async function exportGerberArchive(
 
   const zip = new JSZip()
   const folder = zip.folder(projectName) ?? zip
-  folder.file(`${projectName}.GTL`, output.copper1)
-  folder.file(`${projectName}.GBL`, output.copper0)
-  if (output.copper2) {
-    folder.file(`${projectName}.G1`, output.copper2)
-  }
-  if (output.copper3) {
-    folder.file(`${projectName}.G2`, output.copper3)
+  for (const [layerId, fileContent] of Object.entries(output.copperLayers)) {
+    let extension = ''
+    if (layerId === 'copper1') {
+      extension = 'GTL'
+    } else if (layerId === 'copper0') {
+      extension = 'GBL'
+    } else {
+      const match = layerId.match(/^copper(\d+)$/)
+      if (match) {
+        const num = parseInt(match[1], 10)
+        extension = `G${num - 1}`
+      }
+    }
+    if (extension) {
+      folder.file(`${projectName}.${extension}`, fileContent)
+    }
   }
   folder.file(`${projectName}.GTO`, output.silkscreen)
   folder.file(`${projectName}.DRL`, output.drill)

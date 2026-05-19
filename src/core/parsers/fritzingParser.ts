@@ -15,13 +15,13 @@ const parseSvgElement = (
   let connector: ElementState['connector'] = undefined
 
   // Fritzing conventions
-  if (id.startsWith('connector') && id.endsWith('pin')) {
-    const match = id.match(/connector(\d+)pin/)
+  if (id.startsWith('connector') && (id.endsWith('pin') || id.endsWith('pad'))) {
+    const match = id.match(/connector(\d+)(pin|pad)/)
     if (match) {
       role = 'connector'
       connector = {
-        kind: layer === 'copper0' || layer === 'copper1' ? 'through-hole' : 'smd',
-        pin: parseInt(match[1], 10),
+        kind: id.endsWith('pad') ? 'smd' : 'through-hole',
+        pin: parseInt(match[1], 10) + 1,
         connectorId: `connector${match[1]}`,
         svgId: id,
       }

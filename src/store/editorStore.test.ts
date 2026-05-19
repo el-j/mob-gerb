@@ -89,6 +89,7 @@ describe('editor store project model', () => {
 
   it('tags selected pad as through-hole connector metadata', () => {
     const state = useEditorStore.getState()
+    state.deleteElement('connector0pin')
 
     state.addShape('circle')
     state.applyTagToSelected('through-hole', 1)
@@ -99,8 +100,8 @@ describe('editor store project model', () => {
     expect(addedPad.connector).toEqual({
       kind: 'through-hole',
       pin: 1,
-      connectorId: 'connector1',
-      svgId: 'connector1pin',
+      connectorId: 'connector0',
+      svgId: 'connector0pin',
     })
   })
 
@@ -131,6 +132,7 @@ describe('editor store project model', () => {
 
   it('uses deterministic next pin when requested pin is already taken', () => {
     const state = useEditorStore.getState()
+    state.deleteElement('connector0pin')
 
     state.addShape('circle')
     state.applyTagToSelected('through-hole', 1)
@@ -139,7 +141,7 @@ describe('editor store project model', () => {
 
     const secondPad = useEditorStore.getState().project.elements['shape-2']
     expect(secondPad.connector?.pin).toBe(2)
-    expect(secondPad.connector?.connectorId).toBe('connector2')
+    expect(secondPad.connector?.connectorId).toBe('connector1')
     expect(secondPad.pcbLayer).toBe('copper1')
   })
 

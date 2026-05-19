@@ -6,7 +6,7 @@ describe('fritzingParser', () => {
     const svgStr = `
       <svg>
         <g id="copper1">
-          <rect id="connector1pin" x="10" y="10" width="20" height="20" fill="none" stroke-width="0.5"/>
+          <rect id="connector0pin" x="10" y="10" width="20" height="20" fill="none" stroke-width="0.5"/>
           <circle id="pad2" cx="50" cy="50" r="5" fill="#f7bd13"/>
         </g>
       </svg>
@@ -14,7 +14,7 @@ describe('fritzingParser', () => {
     const elements = extractSvgElements(svgStr)
     expect(elements).toHaveLength(2)
     
-    const connector = elements.find(e => e.id === 'connector1pin')
+    const connector = elements.find(e => e.id === 'connector0pin')
     expect(connector).toBeDefined()
     expect(connector?.type).toBe('rect')
     expect(connector?.role).toBe('connector')

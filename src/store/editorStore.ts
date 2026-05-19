@@ -133,6 +133,12 @@ const createInitialProject = (): FootprintProject => ({
       role: 'connector',
       pcbLayer: 'copper0',
       geom: { x: 54, y: 42, r: 1.2 },
+      connector: {
+        kind: 'through-hole',
+        pin: 1,
+        connectorId: 'connector0',
+        svgId: 'connector0pin',
+      },
     },
     'silk-outline': {
       id: 'silk-outline',
@@ -1016,8 +1022,8 @@ export const useEditorStore = create<EditorState>((set) => ({
         nextElement.connector = {
           kind: tag,
           pin,
-          connectorId: `connector${pin}`,
-          svgId: `connector${pin}pin`,
+          connectorId: `connector${pin - 1}`,
+          svgId: `connector${pin - 1}pin`,
         }
       } else if (tag === 'silkscreen') {
         nextElement.role = 'silkscreen'
@@ -1077,8 +1083,8 @@ export const useEditorStore = create<EditorState>((set) => ({
           clone.connector = {
             kind: element.connector!.kind,
             pin,
-            connectorId: `connector${pin}`,
-            svgId: `connector${pin}pin`,
+            connectorId: `connector${pin - 1}`,
+            svgId: `connector${pin - 1}pin`,
           }
         }
 

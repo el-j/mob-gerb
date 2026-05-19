@@ -17,6 +17,6 @@ test('adds a new pad and tags it with connector metadata', async ({ page }) => {
 
   await expect(newPad).toHaveAttribute('data-role', 'connector')
   await expect(newPad).toHaveAttribute('data-layer', 'copper0')
-  await expect(newPad).toHaveAttribute('data-connector-id', 'connector9')
-  await expect(page.getByText('Connector: connector9 (through-hole)')).toBeVisible()
+  await expect(newPad).toHaveAttribute('data-connector-id', 'connector8')
+  await expect(page.getByText('Connector: connector8 (through-hole)')).toBeVisible()
 })

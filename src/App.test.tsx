@@ -39,7 +39,7 @@ describe('App integration', () => {
 
     expect(screen.getByText(/Role: connector/)).toBeInTheDocument()
     expect(screen.getByText(/Layer: copper1/)).toBeInTheDocument()
-    expect(screen.getAllByText(/Connector: connector7/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Connector: connector6/).length).toBeGreaterThan(0)
   })
 
   it('creates a copper surface without connector metadata', async () => {

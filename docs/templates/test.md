@@ -46,6 +46,7 @@
 
 - New automated checks run locally.
 - The checks are wired into normal repo commands.
+- Feature behavior cannot pass with smoke-only e2e coverage.
 - Failure output is actionable.
 
 ## Notes

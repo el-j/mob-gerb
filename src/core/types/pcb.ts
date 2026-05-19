@@ -8,9 +8,10 @@ export type AppMode =
 
 export type PcbLayer = 'copper0' | 'copper1' | 'silkscreen'
 
-export type ElementType = 'rect' | 'circle' | 'line'
+export type ElementType = 'rect' | 'circle' | 'line' | 'polygon' | 'polyline' | 'group'
 
-export type ElementRole = 'connector' | 'silkscreen' | 'unassigned'
+export type ElementRole = 'connector' | 'silkscreen' | 'copper-surface' | 'unassigned' | 'group'
+export type ConnectorKind = 'through-hole' | 'smd'
 
 export type Coordinate = {
   x: number
@@ -23,6 +24,9 @@ export type ElementGeometry = {
   w?: number
   h?: number
   r?: number
+  points?: Coordinate[]
+  strokeWidth?: number
+  filled?: boolean
 }
 
 export type ElementState = {
@@ -31,12 +35,33 @@ export type ElementState = {
   role: ElementRole
   pcbLayer: PcbLayer
   geom: ElementGeometry
+  groupId?: string | null
+  children?: string[]
+  outlinePaddingMm?: number
+  connector?: {
+    kind: ConnectorKind
+    pin: number
+    connectorId: string
+    svgId: string
+  }
   net?: string
+}
+
+export type ProjectMetadata = {
+  name: string
+  author: string
+}
+
+export type NetState = {
+  id: string
+  padIds: string[]
 }
 
 export type FootprintProject = {
   projectId: string
   lastModified: number
+  metadata: ProjectMetadata
   gridSize: number
   elements: Record<string, ElementState>
+  nets: Record<string, NetState>
 }

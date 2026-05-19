@@ -1,6 +1,6 @@
 # FEAT-001: Project State and History Model
 
-- Status: planned
+- Status: completed
 - Plan-Version: 1
 - Depends on: TEST-001
 
@@ -60,3 +60,6 @@ Replace the current minimal editor store with a serializable project model that 
 ## Notes
 
 - This task is the substrate for most later feature work and should stay focused on state modeling rather than UI polish.
+- Implemented on 2026-05-18.
+- Added integration tests in `src/store/editorStore.test.ts` and kept existing app and math tests green.
+- Validation succeeded with `npm run lint`, `npm run test`, `npm run build`, and `npm run test:e2e`.

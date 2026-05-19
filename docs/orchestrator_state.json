@@ -2,35 +2,11 @@
   "baseBranch": "main",
   "openTasks": [
     {
-      "id": "FEAT-001",
-      "title": "Project State and History Model",
-      "path": "docs/backlog/features/FEAT-001_project-state-and-history-model.md",
-      "type": "feature",
-      "status": "ready",
-      "dependencies": ["TEST-001"]
-    },
-    {
-      "id": "FEAT-002",
-      "title": "State-Driven Canvas and Selection",
-      "path": "docs/backlog/features/FEAT-002_state-driven-canvas-and-selection.md",
-      "type": "feature",
-      "status": "blocked",
-      "dependencies": ["TEST-001", "FEAT-001"]
-    },
-    {
-      "id": "FEAT-003",
-      "title": "Footprint Drawing and Tagging",
-      "path": "docs/backlog/features/FEAT-003_footprint-drawing-and-tagging.md",
-      "type": "feature",
-      "status": "blocked",
-      "dependencies": ["TEST-001", "FEAT-001", "FEAT-002"]
-    },
-    {
       "id": "FEAT-004",
       "title": "Fritzing Import and Part Export",
       "path": "docs/backlog/features/FEAT-004_fritzing-import-and-part-export.md",
       "type": "feature",
-      "status": "blocked",
+      "status": "ready",
       "dependencies": ["TEST-001", "FEAT-001", "FEAT-003"]
     },
     {
@@ -89,7 +65,43 @@
       "title": "Test Foundation and CI Prep",
       "path": "docs/backlog/tests/TEST-001_test-foundation-and-ci-prep.md",
       "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-001",
+      "title": "Project State and History Model",
+      "path": "docs/backlog/features/FEAT-001_project-state-and-history-model.md",
+      "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-002",
+      "title": "State-Driven Canvas and Selection",
+      "path": "docs/backlog/features/FEAT-002_state-driven-canvas-and-selection.md",
+      "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-003",
+      "title": "Footprint Drawing and Tagging",
+      "path": "docs/backlog/features/FEAT-003_footprint-drawing-and-tagging.md",
+      "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-010",
+      "title": "Part Creator Composites, Selection, and Outline Editing",
+      "path": "docs/backlog/features/FEAT-010_part-creator-composites-selection-and-outline-editing.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-011",
+      "title": "SVG Editor Engine Decision and Adoption Strategy",
+      "path": "docs/backlog/features/FEAT-011_svg-editor-engine-decision-and-adoption-strategy.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-012",
+      "title": "Part Creator Mobile UX and Drawing Controls",
+      "path": "docs/backlog/features/FEAT-012_part-creator-mobile-ux-and-drawing-controls.md",
+      "completedAt": "2026-05-19"
     }
   ],
-  "updatedAt": "2026-05-18"
+  "updatedAt": "2026-05-19"
 }

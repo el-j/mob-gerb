@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('loads editor shell and canvas', async ({ page }) => {
+test('@smoke loads editor shell and canvas', async ({ page }) => {
   await page.goto('/')
 
   await expect(page.getByRole('heading', { name: 'MOB-GERB' })).toBeVisible()

@@ -1,6 +1,6 @@
 # FEAT-003: Footprint Drawing and Tagging
 
-- Status: planned
+- Status: completed
 - Plan-Version: 1
 - Depends on: TEST-001, FEAT-001, FEAT-002
 
@@ -60,3 +60,8 @@ Implement the first user-complete footprint creator loop: add primitive shapes, 
 ## Notes
 
 - Keep export-specific XML formatting out of UI code; this task only establishes the tagged model needed by export tasks.
+- Implemented on 2026-05-18.
+- Added shape creation controls (circle/rect/line) and tagging controls in part creator mode.
+- Added connector-aware metadata to tagged pads and deterministic connector pin conflict handling.
+- Added coverage in `src/store/editorStore.test.ts`, `src/App.test.tsx`, and `e2e/footprint-tagging.spec.ts`.
+- Validation succeeded with `npm run lint`, `npm run build`, `npm run test`, `npm run test:e2e:smoke`, `npm run test:e2e:feature`, and `npm run test:ci`.

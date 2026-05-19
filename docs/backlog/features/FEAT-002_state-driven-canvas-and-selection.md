@@ -1,6 +1,6 @@
 # FEAT-002: State-Driven Canvas and Selection
 
-- Status: planned
+- Status: completed
 - Plan-Version: 1
 - Depends on: TEST-001, FEAT-001
 
@@ -60,3 +60,7 @@ Replace the hard-coded SVG sample with state-driven rendering so the canvas refl
 ## Notes
 
 - Keep rendering logic thin; movement math belongs in helpers or the store.
+- Implemented on 2026-05-18.
+- Canvas now renders from store project state and supports selection plus drag movement in `PART_CREATOR_MODE`.
+- Added integration tests in `src/components/Canvas/PcbCanvas.test.tsx` and Playwright coverage in `e2e/canvas-drag.spec.ts`.
+- Validation succeeded with `npm run lint`, `npm run test`, `npm run build`, and `npm run test:e2e`.

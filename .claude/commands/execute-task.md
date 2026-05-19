@@ -12,12 +12,14 @@ Implement one validated task plan with minimal scope drift.
 6. If validation fails, repair the same slice before widening scope.
 7. Finish with `npm run lint` and `npm run build` when TypeScript, React, store, or core logic changed.
 8. For user-facing behavior, add or update Playwright coverage before the task is considered done.
-9. Update the task plan status and record follow-up work instead of bundling unrelated fixes.
+9. For feature tasks, add at least one non-smoke Playwright test case or explicitly update an existing non-smoke case to cover the new behavior.
+10. Update the task plan status and record follow-up work instead of bundling unrelated fixes.
 
 ## Guardrails
 
 - Do not skip validation after the first meaningful edit.
 - Do not merge behavior changes without the corresponding tests from the task plan.
+- Do not treat smoke-only Playwright coverage as sufficient for a completed feature task.
 - Do not rewrite large surfaces when a local change will do.
 - Do not weaken type safety to make validation pass.
 - Do not mix roadmap work into a single backlog task.

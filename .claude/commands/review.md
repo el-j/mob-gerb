@@ -17,6 +17,7 @@ Perform a white-box review of an implemented task against its plan.
 3. Check React components for avoidable business logic.
 4. Check store updates for immutability and serializable state.
 5. Confirm any Fritzing layer assumptions match the docs.
+6. Confirm feature tasks include non-smoke Playwright coverage for the newly introduced behavior.
 
 ## Output
 

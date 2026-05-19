@@ -54,6 +54,7 @@
 - Behavior implemented.
 - Required tests added first or alongside the change.
 - Acceptance criteria mapped to executable checks.
+- At least one non-smoke Playwright scenario is added or updated for feature behavior.
 - Follow-up items separated from current scope.
 
 ## Notes

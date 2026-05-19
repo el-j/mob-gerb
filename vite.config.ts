@@ -14,7 +14,7 @@ export default defineConfig({
       reporter: ['text', 'html'],
     },
   },
-  base: process.env.NODE_ENV === 'github-pages' ? '/mob-gerb/' : '/',
+  base: process.env.NODE_ENV === 'production' ? '/mob-gerb/' : '/',
   build: {
     outDir: 'dist',
     sourcemap: false,

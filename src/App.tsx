@@ -113,8 +113,6 @@ function App() {
         </div>
       </header>
       <ModeToolbar />
-    
-
       {mode === 'PART_CREATOR_MODE' ? (
         <section className="creator-panel" aria-label="Part creator controls">
           <div className="shape-row">

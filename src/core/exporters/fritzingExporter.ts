@@ -1,9 +1,40 @@
 import JSZip from 'jszip'
 import type { FootprintProject, ElementState } from '../types/pcb'
 
+const getElementCenter = (el: ElementState): { cx: number; cy: number } => {
+  switch (el.type) {
+    case 'circle':
+      return { cx: el.geom.x, cy: el.geom.y }
+    case 'rect':
+      return { cx: el.geom.x + (el.geom.w ?? 0) / 2, cy: el.geom.y + (el.geom.h ?? 0) / 2 }
+    case 'polygon':
+    case 'polyline': {
+      const pts = el.geom.points ?? []
+      if (pts.length > 0) {
+        const sumX = pts.reduce((sum, p) => sum + p.x, 0)
+        const sumY = pts.reduce((sum, p) => sum + p.y, 0)
+        return { cx: el.geom.x + sumX / pts.length, cy: el.geom.y + sumY / pts.length }
+      }
+      return { cx: el.geom.x, cy: el.geom.y }
+    }
+    case 'line':
+      return { cx: el.geom.x + (el.geom.w ?? 0) / 2, cy: el.geom.y + (el.geom.h ?? 0) / 2 }
+    default:
+      return { cx: el.geom.x, cy: el.geom.y }
+  }
+}
+
+const renderTerminalSvg = (el: ElementState): string => {
+  if (el.role !== 'connector' || !el.connector) return ''
+  const c = el.connector
+  const { cx, cy } = getElementCenter(el)
+  return `<rect id="${c.connectorId}terminal" x="${cx - 0.0005}" y="${cy - 0.0005}" width="0.001" height="0.001" fill="none" stroke="none" opacity="0" />`
+}
+
 const renderElementToSvg = (el: ElementState): string => {
-  const filledAttr = el.geom.filled ? `fill="${el.pcbLayer === 'silkscreen' ? '#f4f7fb' : '#f7bd13'}"` : 'fill="none"'
-  const strokeAttr = `stroke="${el.pcbLayer === 'silkscreen' ? '#f4f7fb' : '#f7bd13'}"`
+  const isSilkscreen = el.pcbLayer === 'silkscreen'
+  const filledAttr = el.geom.filled ? `fill="${isSilkscreen ? '#ffffff' : '#da8a3a'}"` : 'fill="none"'
+  const strokeAttr = `stroke="${isSilkscreen ? '#ffffff' : '#da8a3a'}"`
   const strokeWidthAttr = `stroke-width="${el.geom.strokeWidth ?? 0.5}"`
   const idAttr = `id="${el.connector?.svgId ?? el.id}"`
 
@@ -23,7 +54,6 @@ const renderElementToSvg = (el: ElementState): string => {
     case 'line':
       return `<line ${idAttr} x1="${el.geom.x}" y1="${el.geom.y}" x2="${el.geom.x + (el.geom.w ?? 0)}" y2="${el.geom.y + (el.geom.h ?? 0)}" fill="none" ${strokeAttr} ${strokeWidthAttr} />`
     case 'group':
-      // Group outline is not exported to actual SVG
       return ''
     default:
       return ''
@@ -35,20 +65,34 @@ export const exportProjectToFritzingSvg = (project: FootprintProject): string =>
   
   const copper0 = elements.filter(e => e.pcbLayer === 'copper0')
   const copper1 = elements.filter(e => e.pcbLayer === 'copper1')
+  const copper2 = elements.filter(e => e.pcbLayer === 'copper2')
+  const copper3 = elements.filter(e => e.pcbLayer === 'copper3')
   const silkscreen = elements.filter(e => e.pcbLayer === 'silkscreen')
+
+  const renderGroup = (el: ElementState) => {
+    const main = renderElementToSvg(el)
+    const term = renderTerminalSvg(el)
+    return term ? `${main}\n    ${term}` : main
+  }
 
   const svgContent = `<?xml version="1.0" encoding="utf-8"?>
 <svg version="1.2" baseProfile="tiny" id="svg2"
   xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
   viewBox="0 0 100 100">
   <g id="copper1">
-    ${copper1.map(renderElementToSvg).join('\n    ')}
-    <g id="copper0">
-      ${copper0.map(renderElementToSvg).join('\n      ')}
+    ${copper1.map(renderGroup).join('\n    ')}
+    <g id="copper2">
+      ${copper2.map(renderGroup).join('\n      ')}
+      <g id="copper3">
+        ${copper3.map(renderGroup).join('\n        ')}
+        <g id="copper0">
+          ${copper0.map(renderGroup).join('\n          ')}
+        </g>
+      </g>
     </g>
   </g>
   <g id="silkscreen">
-    ${silkscreen.map(renderElementToSvg).join('\n    ')}
+    ${silkscreen.map(renderGroup).join('\n    ')}
   </g>
 </svg>
 `
@@ -69,12 +113,12 @@ export const exportProjectToFzpXml = (project: FootprintProject): string => {
     let pcbViewXml = ''
     if (isTht) {
       pcbViewXml = `
-          <p layer="copper0" svgId="${c.svgId}"/>
-          <p layer="copper1" svgId="${c.svgId}"/>`
+          <p layer="copper0" svgId="${c.svgId}" terminalId="${c.connectorId}terminal"/>
+          <p layer="copper1" svgId="${c.svgId}" terminalId="${c.connectorId}terminal"/>`
     } else {
       const layer = el.pcbLayer || 'copper1'
       pcbViewXml = `
-          <p layer="${layer}" svgId="${c.svgId}"/>`
+          <p layer="${layer}" svgId="${c.svgId}" terminalId="${c.connectorId}terminal"/>`
     }
 
     connectorsXml += `
@@ -97,6 +141,8 @@ export const exportProjectToFzpXml = (project: FootprintProject): string => {
     <pcbView>
       <layers image="pcb/${project.projectId}.svg">
         <layer layerId="copper1"/>
+        <layer layerId="copper2"/>
+        <layer layerId="copper3"/>
         <layer layerId="copper0"/>
         <layer layerId="silkscreen"/>
       </layers>

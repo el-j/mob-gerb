@@ -222,6 +222,8 @@ function buildExcellonDrill(holes: DrillHole[]): string {
 export type GerberOutput = {
   copper1: string  // .GTL — copper top
   copper0: string  // .GBL — copper bottom
+  copper2?: string // .G1 — copper inner 1
+  copper3?: string // .G2 — copper inner 2
   silkscreen: string  // .GTO — silkscreen top
   drill: string  // .DRL — Excellon drill
 }
@@ -231,6 +233,8 @@ export function generateGerberOutput(project: FootprintProject): GerberOutput {
 
   const copper1Els = all.filter((e) => e.pcbLayer === 'copper1')
   const copper0Els = all.filter((e) => e.pcbLayer === 'copper0')
+  const copper2Els = all.filter((e) => e.pcbLayer === 'copper2')
+  const copper3Els = all.filter((e) => e.pcbLayer === 'copper3')
   const silkscreenEls = all.filter((e) => e.pcbLayer === 'silkscreen')
 
   // Through-hole drill: circle connectors with kind === 'through-hole' on copper1
@@ -247,6 +251,8 @@ export function generateGerberOutput(project: FootprintProject): GerberOutput {
   return {
     copper1: buildGerberLayer(copper1Els, 'copper1'),
     copper0: buildGerberLayer(copper0Els, 'copper0'),
+    copper2: buildGerberLayer(copper2Els, 'copper2'),
+    copper3: buildGerberLayer(copper3Els, 'copper3'),
     silkscreen: buildGerberLayer(silkscreenEls, 'silkscreen'),
     drill: buildExcellonDrill(drillHoles),
   }

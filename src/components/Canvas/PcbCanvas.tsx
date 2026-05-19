@@ -32,22 +32,53 @@ type ActivePointer = PanPointer | DragPointer | PointDragPointer
 const GRID_VIEWBOX_SIZE = 120
 
 const elementStroke = (element: ElementState): string => {
-  if (element.role === 'connector') {
-    return '#f7bd13'
+  if (element.role === 'group') {
+    return '#91a1b6'
   }
 
-  if (element.role === 'copper-surface') {
-    return '#f7bd13'
+  switch (element.pcbLayer) {
+    case 'copper1':
+      return '#da8a3a'
+    case 'copper0':
+      return '#8f3d03'
+    case 'copper2':
+      return '#a855f7'
+    case 'copper3':
+      return '#ec4899'
+    case 'silkscreen':
+      return '#ffffff'
+    default:
+      return '#91a1b6'
   }
-
-  if (element.role === 'silkscreen') {
-    return '#f4f7fb'
-  }
-
-  return '#91a1b6'
 }
 
-const outlineStroke = '#f4f7fb'
+const elementFill = (element: ElementState, selected: boolean): string => {
+  const isOutline = element.role === 'silkscreen' || element.role === 'group'
+  if (isOutline) return 'none'
+
+  if (selected) {
+    return 'rgba(64, 169, 255, 0.2)'
+  }
+
+  if (!element.geom.filled) {
+    return 'transparent'
+  }
+
+  switch (element.pcbLayer) {
+    case 'copper1':
+      return 'rgba(218, 138, 58, 0.22)'
+    case 'copper0':
+      return 'rgba(143, 61, 3, 0.22)'
+    case 'copper2':
+      return 'rgba(168, 85, 247, 0.22)'
+    case 'copper3':
+      return 'rgba(236, 72, 153, 0.22)'
+    default:
+      return 'rgba(255, 255, 255, 0.1)'
+  }
+}
+
+const outlineStroke = '#ffffff'
 
 export const PcbCanvas = () => {
   const mode = useEditorStore((state) => state.mode)
@@ -655,7 +686,7 @@ export const PcbCanvas = () => {
             cx={element.geom.x}
             cy={element.geom.y}
             r={element.geom.r ?? 1}
-            fill={element.geom.filled ? 'rgba(247, 189, 19, 0.24)' : 'transparent'}
+            fill={elementFill(element, selected)}
             stroke={selected ? '#40a9ff' : elementStroke(element)}
             strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 0.55)}
             strokeLinecap="round"
@@ -696,7 +727,7 @@ export const PcbCanvas = () => {
             y={element.geom.y}
             width={element.geom.w ?? 1}
             height={element.geom.h ?? 1}
-            fill={isOutline ? 'none' : element.geom.filled ? 'rgba(247, 189, 19, 0.2)' : 'transparent'}
+            fill={elementFill(element, selected)}
             stroke={selected ? '#40a9ff' : elementStroke(element)}
             strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 1)}
             vectorEffect="non-scaling-stroke"
@@ -732,7 +763,7 @@ export const PcbCanvas = () => {
             data-layer={element.pcbLayer}
             data-connector-id={element.connector?.connectorId ?? ''}
             points={pointString}
-            fill={element.geom.filled ? (selected ? 'rgba(64, 169, 255, 0.2)' : 'rgba(247, 189, 19, 0.22)') : 'transparent'}
+            fill={elementFill(element, selected)}
             stroke={selected ? '#40a9ff' : elementStroke(element)}
             strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.2 : (element.geom.strokeWidth ?? 1)}
             vectorEffect="non-scaling-stroke"

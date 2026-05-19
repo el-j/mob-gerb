@@ -186,9 +186,11 @@ describe('generateGerberOutput', () => {
   })
 
   it('empty project produces valid Gerber files with only header and footer', () => {
-    const { copper1, copper0, drill } = generateGerberOutput(makeProject([]))
+    const { copper1, copper0, copper2, copper3, drill } = generateGerberOutput(makeProject([]))
     expect(copper1).toContain('M02*')
     expect(copper0).toContain('M02*')
+    expect(copper2).toContain('M02*')
+    expect(copper3).toContain('M02*')
     expect(drill).toContain('M30')
   })
 })

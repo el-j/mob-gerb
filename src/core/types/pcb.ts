@@ -6,7 +6,7 @@ export type AppMode =
   | 'EDIT_TRACE_MODE'
   | 'PART_CREATOR_MODE'
 
-export type PcbLayer = 'copper0' | 'copper1' | 'silkscreen'
+export type PcbLayer = 'copper0' | 'copper1' | 'copper2' | 'copper3' | 'silkscreen'
 
 export type ElementType = 'rect' | 'circle' | 'line' | 'polygon' | 'polyline' | 'group'
 

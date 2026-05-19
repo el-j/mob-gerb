@@ -52,9 +52,16 @@ export const LayersSidebar: React.FC = () => {
   // Categorize elements
   const copper1 = elementList.filter((el) => el.pcbLayer === 'copper1')
   const copper0 = elementList.filter((el) => el.pcbLayer === 'copper0')
+  const copper2 = elementList.filter((el) => el.pcbLayer === 'copper2')
+  const copper3 = elementList.filter((el) => el.pcbLayer === 'copper3')
   const silkscreen = elementList.filter((el) => el.pcbLayer === 'silkscreen')
   const other = elementList.filter(
-    (el) => el.pcbLayer !== 'copper1' && el.pcbLayer !== 'copper0' && el.pcbLayer !== 'silkscreen'
+    (el) =>
+      el.pcbLayer !== 'copper1' &&
+      el.pcbLayer !== 'copper0' &&
+      el.pcbLayer !== 'copper2' &&
+      el.pcbLayer !== 'copper3' &&
+      el.pcbLayer !== 'silkscreen'
   )
 
   const getShapeIcon = (type: string) => {
@@ -81,7 +88,7 @@ export const LayersSidebar: React.FC = () => {
     e.dataTransfer.dropEffect = 'move'
   }
 
-  const handleDrop = (e: React.DragEvent, targetLayer: 'copper1' | 'copper0' | 'silkscreen') => {
+  const handleDrop = (e: React.DragEvent, targetLayer: 'copper1' | 'copper0' | 'copper2' | 'copper3' | 'silkscreen') => {
     e.preventDefault()
     const id = e.dataTransfer.getData('text/plain')
     if (!id) return
@@ -164,7 +171,7 @@ export const LayersSidebar: React.FC = () => {
                   } else {
                     setTaggingElementId(el.id)
                     setTagPinInput(String(getNextPin()))
-                    setTagKind(el.pcbLayer === 'copper1' ? 'smd' : 'through-hole')
+                    setTagKind(el.pcbLayer === 'copper0' ? 'through-hole' : 'smd')
                   }
                 }}
                 title="Tag as connector"
@@ -237,7 +244,7 @@ export const LayersSidebar: React.FC = () => {
                     upsertElement({
                       ...el,
                       role: 'connector',
-                      pcbLayer: tagKind === 'through-hole' ? 'copper0' : 'copper1',
+                      pcbLayer: tagKind === 'through-hole' ? 'copper0' : (el.pcbLayer === 'silkscreen' ? 'copper1' : el.pcbLayer),
                       connector: {
                         kind: tagKind,
                         pin,
@@ -299,6 +306,54 @@ export const LayersSidebar: React.FC = () => {
                   <div className="empty-section-placeholder">No top copper items</div>
                 ) : (
                   copper1.map(renderElementRow)
+                )}
+              </div>
+            </div>
+
+            {/* Inner Copper 1 (copper2) Section */}
+            <div
+              className={`sidebar-section ${dragOverLayer === 'copper2' ? 'drag-over' : ''}`}
+              onDragOver={handleDragOver}
+              onDragEnter={() => setDragOverLayer('copper2')}
+              onDragLeave={() => setDragOverLayer(null)}
+              onDrop={(e) => {
+                handleDrop(e, 'copper2')
+                setDragOverLayer(null)
+              }}
+            >
+              <div className="section-title copper2-header flex justify-between items-center text-purple-400 font-semibold border-b border-purple-500/20 pb-1 mb-1">
+                <span>Inner Copper 1 (copper2)</span>
+                <span className="section-count px-1.5 py-0.2 bg-purple-500/20 rounded text-[10px]">{copper2.length}</span>
+              </div>
+              <div className="section-items">
+                {copper2.length === 0 ? (
+                  <div className="empty-section-placeholder text-purple-400/40 text-[10px] italic p-1">No inner 1 copper items</div>
+                ) : (
+                  copper2.map(renderElementRow)
+                )}
+              </div>
+            </div>
+
+            {/* Inner Copper 2 (copper3) Section */}
+            <div
+              className={`sidebar-section ${dragOverLayer === 'copper3' ? 'drag-over' : ''}`}
+              onDragOver={handleDragOver}
+              onDragEnter={() => setDragOverLayer('copper3')}
+              onDragLeave={() => setDragOverLayer(null)}
+              onDrop={(e) => {
+                handleDrop(e, 'copper3')
+                setDragOverLayer(null)
+              }}
+            >
+              <div className="section-title copper3-header flex justify-between items-center text-pink-400 font-semibold border-b border-pink-500/20 pb-1 mb-1">
+                <span>Inner Copper 2 (copper3)</span>
+                <span className="section-count px-1.5 py-0.2 bg-pink-500/20 rounded text-[10px]">{copper3.length}</span>
+              </div>
+              <div className="section-items">
+                {copper3.length === 0 ? (
+                  <div className="empty-section-placeholder text-pink-400/40 text-[10px] italic p-1">No inner 2 copper items</div>
+                ) : (
+                  copper3.map(renderElementRow)
                 )}
               </div>
             </div>

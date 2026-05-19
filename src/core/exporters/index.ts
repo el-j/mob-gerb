@@ -19,6 +19,12 @@ export async function exportGerberArchive(
   const folder = zip.folder(projectName) ?? zip
   folder.file(`${projectName}.GTL`, output.copper1)
   folder.file(`${projectName}.GBL`, output.copper0)
+  if (output.copper2) {
+    folder.file(`${projectName}.G1`, output.copper2)
+  }
+  if (output.copper3) {
+    folder.file(`${projectName}.G2`, output.copper3)
+  }
   folder.file(`${projectName}.GTO`, output.silkscreen)
   folder.file(`${projectName}.DRL`, output.drill)
 

@@ -1,17 +1,14 @@
 {
   "baseBranch": "main",
-  "openTasks": [
+  "openTasks": [],
+  "blockedTasks": [],
+  "completedTasks": [
     {
       "id": "TEST-002",
       "title": "Full Playwright and GitHub Actions",
       "path": "docs/backlog/tests/TEST-002_full-playwright-and-github-actions.md",
-      "type": "test",
-      "status": "ready",
-      "dependencies": ["TEST-001", "FEAT-003", "FEAT-004", "FEAT-006", "FEAT-007", "FEAT-008", "FEAT-009"]
-    }
-  ],
-  "blockedTasks": [],
-  "completedTasks": [
+      "completedAt": "2026-05-19"
+    },
     {
       "id": "FEAT-009",
       "title": "Gerber and Excellon Export",

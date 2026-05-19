@@ -27,7 +27,6 @@ export const FileControls = ({
         FZPZ
         <input type="file" accept=".fzpz,.fzz" onChange={onFritzingUpload} style={{ display: 'none' }} />
       </label>
-      <button className="ui-btn" type="button" onClick={onExportFritzing}>
       <button className="ui-btn" type="button" onClick={onExportFritzing} data-testid="export-fzpz-btn">
         FZPZ
       </button>
@@ -35,7 +34,6 @@ export const FileControls = ({
         Draft
         <input type="file" accept=".json" onChange={onImportDraft} style={{ display: 'none' }} />
       </label>
-      <button className="ui-btn" type="button" onClick={onExportDraft} title="Export draft (.pcb-draft.json)">
       <button className="ui-btn" type="button" onClick={onExportDraft} title="Export draft (.pcb-draft.json)" data-testid="export-draft-btn">
         💾
       </button>

@@ -1,6 +1,6 @@
 # TEST-002: Full Playwright and GitHub Actions
 
-- Status: planned
+- Status: completed
 - Plan-Version: 1
 - Depends on: TEST-001, FEAT-003, FEAT-004, FEAT-006, FEAT-007, FEAT-008, FEAT-009
 

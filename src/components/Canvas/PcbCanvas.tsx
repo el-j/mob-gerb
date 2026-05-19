@@ -24,6 +24,7 @@ type PointDragPointer = {
   id: number
   elementId: string
   pointIndex: number
+  offset: Coordinate
 }
 
 type ActivePointer = PanPointer | DragPointer | PointDragPointer
@@ -78,13 +79,23 @@ export const PcbCanvas = () => {
   const cancelLogicalConnection = useEditorStore((state) => state.cancelLogicalConnection)
   const setLogicalDraftPointer = useEditorStore((state) => state.setLogicalDraftPointer)
   const isRouting = useEditorStore((state) => state.isRouting)
+  const editingTraceId = useEditorStore((state) => state.editingTraceId)
+  const drcViolations = useEditorStore((state) => state.drcViolations)
+  const enterTraceEdit = useEditorStore((state) => state.enterTraceEdit)
+  const exitTraceEdit = useEditorStore((state) => state.exitTraceEdit)
+  const updateTraceVertex = useEditorStore((state) => state.updateTraceVertex)
 
   const pointerRef = useRef<ActivePointer | null>(null)
+  const lastTapRef = useRef<{ elementId: string; time: number } | null>(null)
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && mode === 'LOGICAL_MODE') {
         cancelLogicalConnection()
+      }
+
+      if (event.key === 'Escape' && mode === 'EDIT_TRACE_MODE') {
+        exitTraceEdit()
       }
 
       if (mode !== 'PART_CREATOR_MODE') return
@@ -134,6 +145,27 @@ export const PcbCanvas = () => {
         } else {
           startLogicalConnection(elementId)
         }
+      }
+      return
+    }
+
+    // Double-tap detection: two taps on same polyline trace within 350ms → enter trace edit
+    if (mode === 'VIEW_MODE' || mode === 'EDIT_TRACE_MODE') {
+      const element = elements[elementId]
+      const now = Date.now()
+      const last = lastTapRef.current
+      if (last && last.elementId === elementId && now - last.time < 350) {
+        lastTapRef.current = null
+        if (element?.type === 'polyline') {
+          enterTraceEdit(elementId)
+          return
+        }
+      } else {
+        lastTapRef.current = { elementId, time: now }
+      }
+      // In EDIT_TRACE_MODE clicking a non-active element exits
+      if (mode === 'EDIT_TRACE_MODE' && elementId !== editingTraceId) {
+        exitTraceEdit()
       }
       return
     }
@@ -243,6 +275,18 @@ export const PcbCanvas = () => {
         const worldPoint = clientToWorld(event.clientX, event.clientY, event.currentTarget)
         updateSelectedPointFromWorld(activePointer.pointIndex, snapCoordinate(worldPoint, gridSize))
       }
+      if (activePointer.kind === 'point-drag' && mode === 'EDIT_TRACE_MODE' && editingTraceId) {
+        const worldPoint = clientToWorld(event.clientX, event.clientY, event.currentTarget)
+        const trace = elements[editingTraceId]
+        if (trace) {
+          const snapped = snapCoordinate(worldPoint, gridSize)
+          // Convert world coords back to relative coords (relative to trace geom origin)
+          updateTraceVertex(editingTraceId, activePointer.pointIndex, {
+            x: snapped.x - trace.geom.x,
+            y: snapped.y - trace.geom.y,
+          })
+        }
+      }
       return
     }
 
@@ -277,6 +321,7 @@ export const PcbCanvas = () => {
       id: event.pointerId,
       elementId,
       pointIndex,
+      offset: { x: 0, y: 0 },
     }
   }
 
@@ -325,6 +370,7 @@ export const PcbCanvas = () => {
       id: event.pointerId,
       elementId,
       pointIndex: insertIndex,
+      offset: { x: 0, y: 0 },
     }
   }
 
@@ -400,6 +446,81 @@ export const PcbCanvas = () => {
     return airwires
   }
 
+  const handleTraceHandlePointerDown = (
+    event: PointerEvent<SVGCircleElement>,
+    traceId: string,
+    pointIndex: number,
+  ) => {
+    event.stopPropagation()
+    if (typeof event.currentTarget.setPointerCapture === 'function') {
+      event.currentTarget.setPointerCapture(event.pointerId)
+    }
+    const svgEl = event.currentTarget.ownerSVGElement
+    if (!svgEl) return
+    const worldPoint = clientToWorld(event.clientX, event.clientY, svgEl)
+    pointerRef.current = {
+      kind: 'point-drag',
+      id: event.pointerId,
+      elementId: traceId,
+      pointIndex,
+      offset: { x: 0, y: 0 },
+    }
+  }
+
+  const renderTraceHandles = () => {
+    if (mode !== 'EDIT_TRACE_MODE' || !editingTraceId) return null
+    const trace = elements[editingTraceId]
+    if (!trace || trace.type !== 'polyline') return null
+    const pts = trace.geom.points ?? []
+    const handleR = Math.max(1, 3 / zoom)
+
+    return pts.map((pt, i) => {
+      const absX = trace.geom.x + pt.x
+      const absY = trace.geom.y + pt.y
+      return (
+        <circle
+          key={`trace-handle-${i}`}
+          data-testid={`trace-handle-${i}`}
+          cx={absX}
+          cy={absY}
+          r={handleR}
+          fill="#3b82f6"
+          stroke="#1e40af"
+          strokeWidth={Math.max(0.1, 0.3 / zoom)}
+          style={{ cursor: 'grab' }}
+          onPointerDown={(e) => handleTraceHandlePointerDown(e, editingTraceId, i)}
+        />
+      )
+    })
+  }
+
+  const renderDrcHalos = () => {
+    if (drcViolations.length === 0) return null
+    const violatingIds = new Set(drcViolations.flatMap((v) => v.elementIds))
+    return Array.from(violatingIds).map((elId) => {
+      const el = elements[elId]
+      if (!el || el.type === 'group') return null
+      const bb = el.type === 'circle'
+        ? { x: el.geom.x - (el.geom.r ?? 0) - 0.5, y: el.geom.y - (el.geom.r ?? 0) - 0.5, w: (el.geom.r ?? 0) * 2 + 1, h: (el.geom.r ?? 0) * 2 + 1 }
+        : { x: el.geom.x - 0.5, y: el.geom.y - 0.5, w: (el.geom.w ?? 2) + 1, h: (el.geom.h ?? 2) + 1 }
+      return (
+        <rect
+          key={`drc-halo-${elId}`}
+          className="drc-violation-halo"
+          x={bb.x}
+          y={bb.y}
+          width={bb.w}
+          height={bb.h}
+          fill="none"
+          stroke="#ef4444"
+          strokeWidth={Math.max(0.1, 0.5 / zoom)}
+          rx={0.3}
+          pointerEvents="none"
+        />
+      )
+    })
+  }
+
   const renderElement = (element: ElementState) => {
     const selected = selectedElementIds.includes(element.id)
 
@@ -422,7 +543,7 @@ export const PcbCanvas = () => {
           r={element.geom.r ?? 1}
           fill={element.geom.filled ? 'rgba(247, 189, 19, 0.24)' : 'transparent'}
           stroke={selected ? '#40a9ff' : elementStroke(element)}
-          strokeWidth={selected ? (element.geom.strokeWidth ?? 0.55) + 0.25 : (element.geom.strokeWidth ?? 0.55)}
+          strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 0.55)}
           strokeLinecap="round"
           vectorEffect="non-scaling-stroke"
           onPointerDown={(event) => handleElementPointerDown(event, element.id)}
@@ -448,7 +569,7 @@ export const PcbCanvas = () => {
           height={element.geom.h ?? 1}
           fill={isOutline ? 'none' : element.geom.filled ? 'rgba(247, 189, 19, 0.2)' : 'transparent'}
           stroke={selected ? '#40a9ff' : elementStroke(element)}
-          strokeWidth={selected ? (element.geom.strokeWidth ?? 0.35) + 0.25 : (element.geom.strokeWidth ?? 0.35)}
+          strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 1)}
           vectorEffect="non-scaling-stroke"
           pointerEvents={isOutline ? 'stroke' : 'visiblePainted'}
           onPointerDown={(event) => handleElementPointerDown(event, element.id)}
@@ -472,7 +593,7 @@ export const PcbCanvas = () => {
           points={pointString}
           fill={element.geom.filled ? (selected ? 'rgba(64, 169, 255, 0.2)' : 'rgba(247, 189, 19, 0.22)') : 'transparent'}
           stroke={selected ? '#40a9ff' : elementStroke(element)}
-          strokeWidth={selected ? (element.geom.strokeWidth ?? 0.4) + 0.2 : (element.geom.strokeWidth ?? 0.4)}
+          strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.2 : (element.geom.strokeWidth ?? 1)}
           vectorEffect="non-scaling-stroke"
           onPointerDown={(event) => handleElementPointerDown(event, element.id)}
         />
@@ -495,7 +616,7 @@ export const PcbCanvas = () => {
           points={pointString}
           fill="none"
           stroke={selected ? '#40a9ff' : elementStroke(element)}
-          strokeWidth={selected ? (element.geom.strokeWidth ?? 0.5) + 0.25 : (element.geom.strokeWidth ?? 0.5)}
+          strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 1)}
           strokeLinecap="round"
           strokeLinejoin="round"
           vectorEffect="non-scaling-stroke"
@@ -519,7 +640,7 @@ export const PcbCanvas = () => {
         y2={element.geom.y + (element.geom.h ?? 0)}
         fill="none"
         stroke={selected ? '#40a9ff' : elementStroke(element)}
-        strokeWidth={selected ? (element.geom.strokeWidth ?? 0.5) + 0.25 : (element.geom.strokeWidth ?? 0.5)}
+        strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 1)}
         strokeLinecap="round"
         vectorEffect="non-scaling-stroke"
         onPointerDown={(event) => handleElementPointerDown(event, element.id)}
@@ -709,15 +830,17 @@ export const PcbCanvas = () => {
               points={draftPointString}
               fill="none"
               stroke="#7eb7ff"
-              strokeWidth={0.5}
+              strokeWidth={0.75}
               strokeDasharray="1.5 1"
               vectorEffect="non-scaling-stroke"
               pointerEvents="none"
             />
           ) : null}
           {renderAirwires()}
+          {renderDrcHalos()}
           {renderSelectionBox()}
           {renderPointHandles()}
+          {renderTraceHandles()}
           {groupElements.map(renderGroupOutline)}
         </g>
       </g>
@@ -730,6 +853,17 @@ export const PcbCanvas = () => {
           fill="rgba(0,0,0,0.35)"
           data-testid="routing-overlay"
           pointerEvents="all"
+        />
+      ) : null}
+      {mode === 'EDIT_TRACE_MODE' && editingTraceId ? (
+        <rect
+          x={0}
+          y={0}
+          width="100%"
+          height="100%"
+          fill="rgba(0,0,0,0.18)"
+          data-testid="trace-edit-overlay"
+          pointerEvents="none"
         />
       ) : null}
     </svg>

@@ -39,6 +39,11 @@ function App() {
   const isRouting = useEditorStore((state) => state.isRouting)
   const triggerAutoroute = useEditorStore((state) => state.triggerAutoroute)
   const nets = useEditorStore((state) => state.project.nets)
+  const drcViolations = useEditorStore((state) => state.drcViolations)
+  const drcClearanceMm = useEditorStore((state) => state.drcClearanceMm)
+  const exitTraceEdit = useEditorStore((state) => state.exitTraceEdit)
+  const runDrcAction = useEditorStore((state) => state.runDrc)
+  const setDrcClearance = useEditorStore((state) => state.setDrcClearance)
 
   const [pinInput, setPinInput] = useState('1')
 
@@ -88,57 +93,27 @@ function App() {
 
   return (
     <main className="app-shell">
-      <header className="app-header">
-        <div>
+      <header className="app-header flex">
+        <div className="flex flex-col">
           <h1>MOB-GERB</h1>
           <p>Mobile-first, Fritzing-compatible PCB editor foundation.</p>
         </div>
-
-        <div className="viewport-status" aria-label="Workspace status">
-          <span>Mode: {mode}</span>
-          <span className="zoom-pill">Zoom: {Math.round(zoom * 100)}%</span>
-        </div>
-      </header>
-
-      <section className="top-controls">
-        <ModeToolbar />
-
-        <div className="file-controls" aria-label="File controls">
+        <div className="flex shrink-0 gap-2 justify-center items-center" aria-label="File controls">
           <label className="file-upload-btn">
-            Import SVG
+            SVG
             <input type="file" accept=".svg" onChange={handleSvgUpload} style={{ display: 'none' }} />
           </label>
           <label className="file-upload-btn">
-            Import FZPZ
+            FZPZ
             <input type="file" accept=".fzpz,.fzz" onChange={handleFritzingUpload} style={{ display: 'none' }} />
           </label>
           <button type="button" onClick={handleExportFritzing}>
-            Export FZPZ
+            FZPZ
           </button>
         </div>
-
-        <div className="camera-controls" aria-label="Camera controls">
-          <button type="button" onClick={() => zoomBy(-0.1)}>
-            Zoom Out
-          </button>
-          <button type="button" onClick={() => zoomBy(0.1)}>
-            Zoom In
-          </button>
-          <button type="button" onClick={resetView}>
-            Reset View
-          </button>
-          <label>
-            Grid (mm)
-            <input
-              type="number"
-              min="0.1"
-              step="0.01"
-              value={gridSize}
-              onChange={(event) => setGridSize(Number(event.target.value))}
-            />
-          </label>
-        </div>
-      </section>
+      </header>
+      <ModeToolbar />
+    
 
       {mode === 'PART_CREATOR_MODE' ? (
         <section className="creator-panel" aria-label="Part creator controls">
@@ -220,7 +195,7 @@ function App() {
                   min="0.1"
                   max="4"
                   step="0.1"
-                  value={selectedElement.geom.strokeWidth ?? 0.5}
+                  value={selectedElement.geom.strokeWidth ?? 1}
                   onChange={(event) => setSelectedStrokeWidth(Number(event.target.value))}
                 />
               </label>
@@ -313,6 +288,49 @@ function App() {
         </section>
       ) : null}
 
+      {mode === 'EDIT_TRACE_MODE' ? (
+        <section className="creator-panel" aria-label="Trace edit controls">
+          <div className="drc-panel">
+            <div className="shape-row">
+              <span style={{ opacity: 0.7 }}>
+                ✏️ Editing trace — drag waypoint handles to reshape. <kbd>Esc</kbd> to exit.
+              </span>
+              <button id="exit-trace-edit-btn" type="button" onClick={exitTraceEdit}>
+                Exit Edit Mode
+              </button>
+            </div>
+            <div className="tag-row">
+              <label>
+                Clearance (mm)
+                <input
+                  id="drc-clearance-input"
+                  type="number"
+                  min="0.05"
+                  step="0.05"
+                  value={drcClearanceMm}
+                  onChange={(e) => setDrcClearance(Number(e.target.value))}
+                  style={{ width: '4.5rem' }}
+                />
+              </label>
+              <button id="run-drc-btn" type="button" onClick={runDrcAction}>
+                🔍 Run DRC
+              </button>
+            </div>
+            {drcViolations.length === 0 ? (
+              <p className="drc-ok">✅ No DRC violations</p>
+            ) : (
+              <ul className="drc-violations-list" aria-label="DRC violations">
+                {drcViolations.map((v) => (
+                  <li key={v.id} className={`drc-violation-item ${v.type}`}>
+                    {v.type === 'short' ? '⚡ SHORT' : '⚠️ CLEARANCE'} — {v.message}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      ) : null}
+
       <section className="workspace-frame" aria-label="Workspace">
         <div className="floating-zoom" aria-label="Zoom controls">
           <button type="button" onClick={() => zoomBy(0.1)}>
@@ -325,6 +343,16 @@ function App() {
           <button type="button" onClick={resetView}>
             1:1
           </button>
+           <label>
+            Grid (mm)
+            <input
+              type="number"
+              min="0.1"
+              step="0.01"
+              value={gridSize}
+              onChange={(event) => setGridSize(Number(event.target.value))}
+            />
+          </label>
         </div>
         <PcbCanvas />
       </section>

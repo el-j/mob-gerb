@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('supports free draw, selection visibility, style edits, and quick 1:1 reset', async ({ page }) => {
+test('@headed supports free draw, selection visibility, style edits, and quick 1:1 reset', async ({ page }) => {
   await page.goto('/')
 
   await page.getByRole('button', { name: 'PART CREATOR' }).click()
@@ -64,10 +64,14 @@ test('supports free draw, selection visibility, style edits, and quick 1:1 reset
   await rect.click()
   await page.getByRole('button', { name: 'Set Filled' }).click()
 
-  await page.getByRole('button', { name: 'Zoom In' }).click()
-  await expect(page.getByText('Zoom: 110%')).toBeVisible()
-  await page.getByRole('button', { name: '1:1' }).click()
-  await expect(page.getByText('Zoom: 100%')).toBeVisible()
+
+  await expect(page.getByText('1:1')).toBeVisible()
+  await page.getByRole('button', { name: '+' }).click()
+
+  await expect(page.getByText('110%')).toBeVisible()
+  await page.getByRole('button', { name: '+' }).click()
+  await expect(page.getByText('120%')).toBeVisible()
+
 
   // Copy, paste, delete
   await rect.click()

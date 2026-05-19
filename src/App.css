@@ -70,10 +70,14 @@ p {
   gap: 0.35rem;
 }
 
+
+
 .toolbar button,
 .status-row input,
+.file-controls button,
+.file-controls > label > input,
 .camera-controls button,
-.camera-controls input {
+.workspace-frame input {
   border: 1px solid #2e3a4a;
   border-radius: 0.5rem;
   background: linear-gradient(180deg, #1a2531, #121b25);
@@ -322,4 +326,49 @@ a {
     top: 5.75rem;
     z-index: 5;
   }
+}
+
+/* DRC violation highlight */
+@keyframes drc-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.drc-violation-halo {
+  animation: drc-pulse 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.drc-panel {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.drc-violations-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+  max-height: 8rem;
+  overflow-y: auto;
+}
+
+.drc-violation-item {
+  font-size: 0.72rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.4rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.drc-violation-item.short {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.6);
+}
+
+.drc-ok {
+  font-size: 0.72rem;
+  color: #6ee7b7;
 }

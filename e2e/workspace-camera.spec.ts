@@ -3,11 +3,17 @@ import { expect, test } from '@playwright/test'
 test('zooms and resets the workspace without introducing horizontal overflow', async ({ page }) => {
   await page.goto('/')
 
-  await expect(page.getByText('Zoom: 100%')).toBeVisible()
-  await page.getByRole('button', { name: 'Zoom In' }).click()
-  await expect(page.getByText('Zoom: 110%')).toBeVisible()
-  await page.getByRole('button', { name: 'Reset View' }).click()
-  await expect(page.getByText('Zoom: 100%')).toBeVisible()
+  await expect(page.getByText('1:1')).toBeVisible()
+  await page.getByRole('button', { name: '+' }).click()
+  await expect(page.getByText('110%')).toBeVisible()
+  await page.getByRole('button', { name: '+' }).click()
+  await expect(page.getByText('120%')).toBeVisible()
+  await page.getByRole('button', { name: '-' }).click()
+  await expect(page.getByText('110%')).toBeVisible()
+  await page.getByRole('button', { name: '1:1' }).click()
+  await expect(page.getByText('100%')).toBeVisible()
+  
+  
 
   const overflow = await page.evaluate(() => {
     const doc = document.documentElement

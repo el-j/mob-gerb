@@ -15,11 +15,11 @@ export const ModeToolbar = () => {
   const setMode = useEditorStore((state) => state.setMode)
 
   return (
-    <nav aria-label="Editor mode toolbar" className="toolbar">
+    <nav aria-label="Editor mode toolbar" className="flex flex-row justify-between flex-nowrap gap-4 px-2">
       {modes.map((entry) => (
         <button
           key={entry}
-          className={entry === mode ? 'active' : undefined}
+          className={(entry === mode ? 'active' : undefined) + ' flex'}
           onClick={() => setMode(entry)}
           type="button"
         >

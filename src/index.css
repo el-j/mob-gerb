@@ -1,5 +1,19 @@
+@import "tailwindcss";
+
 html,
 body {
   margin: 0;
   min-height: 100%;
+}
+
+
+button {
+  @apply flex justify-center items-center;
+  @apply border border-gray-600;
+  @apply rounded-lg;
+  @apply bg-gray-900;
+  @apply text-gray-200;
+  @apply min-h-8;
+  @apply text-sm;
+  @apply px-4 py-2;
 }

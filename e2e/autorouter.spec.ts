@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('triggers autorouter and creates a copper trace polyline', async ({ page }) => {
+test('@headed triggers autorouter and creates a copper trace polyline', async ({ page }) => {
   await page.goto('/')
 
   // Step 1: Enter Part Creator Mode and create two connector pads

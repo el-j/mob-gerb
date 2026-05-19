@@ -51,6 +51,7 @@ export type EditorState = {
   setHoveredElementId: (id: string | null) => void
   toggleElementVisibility: (id: string) => void
   deleteElement: (id: string) => void
+  renameElement: (id: string, name: string) => void
   setMode: (mode: AppMode) => void
   panBy: (delta: Coordinate) => void
   setZoom: (zoom: number) => void
@@ -417,6 +418,30 @@ export const useEditorStore = create<EditorState>((set) => ({
         historyPast: [...state.historyPast.slice(-MAX_HISTORY_SIZE + 1), snapshot],
         historyFuture: [],
         ...setSelectionState(nextSelectedIds),
+      }
+    }),
+  renameElement: (elementId, name) =>
+    set((state) => {
+      const element = state.project.elements[elementId]
+      if (!element) return state
+
+      const snapshot = createSnapshot(state)
+
+      const updatedElements = {
+        ...state.project.elements,
+        [elementId]: {
+          ...element,
+          name,
+        },
+      }
+
+      return {
+        project: withTouchedProject({
+          ...state.project,
+          elements: updatedElements,
+        }),
+        historyPast: [...state.historyPast.slice(-MAX_HISTORY_SIZE + 1), snapshot],
+        historyFuture: [],
       }
     }),
   setMode: (mode) => set({ mode }),
@@ -1023,7 +1048,7 @@ export const useEditorStore = create<EditorState>((set) => ({
           kind: tag,
           pin,
           connectorId: `connector${pin - 1}`,
-          svgId: `connector${pin - 1}pin`,
+          svgId: tag === 'through-hole' ? `connector${pin - 1}pin` : `connector${pin - 1}pad`,
         }
       } else if (tag === 'silkscreen') {
         nextElement.role = 'silkscreen'
@@ -1084,7 +1109,7 @@ export const useEditorStore = create<EditorState>((set) => ({
             kind: element.connector!.kind,
             pin,
             connectorId: `connector${pin - 1}`,
-            svgId: `connector${pin - 1}pin`,
+            svgId: element.connector!.kind === 'through-hole' ? `connector${pin - 1}pin` : `connector${pin - 1}pad`,
           }
         }
 

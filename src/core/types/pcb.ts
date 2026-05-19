@@ -45,6 +45,7 @@ export type ElementState = {
     svgId: string
   }
   net?: string
+  name?: string
 }
 
 export type ProjectMetadata = {

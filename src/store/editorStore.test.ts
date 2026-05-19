@@ -362,4 +362,23 @@ describe('editor store project model', () => {
     state.deleteElement('connector0pin')
     expect(useEditorStore.getState().project.elements['connector0pin']).toBeUndefined()
   })
+
+  it('supports custom element renaming with undo/redo history', () => {
+    const state = useEditorStore.getState()
+
+    state.addShape('rect')
+    expect(useEditorStore.getState().project.elements['shape-1'].name).toBeUndefined()
+
+    // Rename
+    state.renameElement('shape-1', 'Power Pad')
+    expect(useEditorStore.getState().project.elements['shape-1'].name).toBe('Power Pad')
+
+    // Undo
+    state.undo()
+    expect(useEditorStore.getState().project.elements['shape-1'].name).toBeUndefined()
+
+    // Redo
+    state.redo()
+    expect(useEditorStore.getState().project.elements['shape-1'].name).toBe('Power Pad')
+  })
 })

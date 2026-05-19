@@ -735,3 +735,39 @@ a {
     opacity: 1;
   }
 }
+
+/* Inline renaming & quick tagging styles */
+.inline-rename-input {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(64, 169, 255, 0.8);
+  border-radius: 0.25rem;
+  color: #ffffff;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.25rem;
+  width: 110px;
+  outline: none;
+}
+
+.sidebar-element-row-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-inline-tagger {
+  margin-top: 0.15rem;
+  padding: 0 0.25rem;
+  animation: sidebar-slide-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tag-btn.active-tagging {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #f59e0b !important;
+}
+
+.tag-btn:hover {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+

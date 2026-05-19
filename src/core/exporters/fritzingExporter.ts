@@ -63,13 +63,25 @@ export const exportProjectToFzpXml = (project: FootprintProject): string => {
   let connectorsXml = ''
   for (const el of connectors) {
     const c = el.connector!
+    const isTht = c.kind === 'through-hole'
+    const typeAttr = isTht ? 'male' : 'pad'
+    
+    let pcbViewXml = ''
+    if (isTht) {
+      pcbViewXml = `
+          <p layer="copper0" svgId="${c.svgId}"/>
+          <p layer="copper1" svgId="${c.svgId}"/>`
+    } else {
+      const layer = el.pcbLayer || 'copper1'
+      pcbViewXml = `
+          <p layer="${layer}" svgId="${c.svgId}"/>`
+    }
+
     connectorsXml += `
-    <connector id="${c.connectorId}" type="pad" name="pin${c.pin}">
+    <connector id="${c.connectorId}" type="${typeAttr}" name="Pin ${c.pin}">
       <description>Pin ${c.pin}</description>
       <views>
-        <pcbView>
-          <p layer="copper0" svgId="${c.svgId}"/>
-          <p layer="copper1" svgId="${c.svgId}"/>
+        <pcbView>${pcbViewXml}
         </pcbView>
       </views>
     </connector>`

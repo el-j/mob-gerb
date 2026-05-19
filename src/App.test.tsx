@@ -18,11 +18,11 @@ describe('App integration', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    expect(screen.getByText('Mode: VIEW_MODE')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'VIEW' })).toHaveClass('active')
 
     await user.click(screen.getByRole('button', { name: 'LOGICAL' }))
 
-    expect(screen.getByText('Mode: LOGICAL_MODE')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'LOGICAL' })).toHaveClass('active')
   })
 
   it('adds a pad and tags it as SMD through part creator controls', async () => {
@@ -71,14 +71,14 @@ describe('App integration', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: 'Zoom In' }))
-    expect(screen.getByText('Zoom: 110%')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '+' }))
+    expect(screen.getByText('110%')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Zoom Out' }))
-    expect(screen.getByText('Zoom: 100%')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '-' }))
+    expect(screen.getByText('100%')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Zoom In' }))
-    await user.click(screen.getByRole('button', { name: 'Reset View' }))
-    expect(screen.getByText('Zoom: 100%')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '+' }))
+    await user.click(screen.getByRole('button', { name: '1:1' }))
+    expect(screen.getByText('100%')).toBeInTheDocument()
   })
 })

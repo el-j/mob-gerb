@@ -2,6 +2,22 @@
   "baseBranch": "main",
   "openTasks": [
     {
+      "id": "REFACTOR-003",
+      "title": "Selector Hooks and Mode Panel Modules",
+      "path": "docs/backlog/refactor/REFACTOR-003_selector-hooks-and-mode-panel-modules.md",
+      "type": "refactor",
+      "status": "ready",
+      "dependencies": ["REFACTOR-001"]
+    },
+    {
+      "id": "TEST-003",
+      "title": "Style and Interaction Regression Guards",
+      "path": "docs/backlog/tests/TEST-003_style-and-interaction-regression-guards.md",
+      "type": "test",
+      "status": "ready",
+      "dependencies": ["REFACTOR-002"]
+    },
+    {
       "id": "FEAT-007",
       "title": "Trace Edit Mode and DRC",
       "path": "docs/backlog/features/FEAT-007_trace-edit-mode-and-drc.md",
@@ -32,9 +48,22 @@
       "type": "test",
       "status": "blocked",
       "dependencies": ["TEST-001", "FEAT-003", "FEAT-004", "FEAT-006", "FEAT-007", "FEAT-008", "FEAT-009"]
+    }
   ],
   "blockedTasks": [],
   "completedTasks": [
+    {
+      "id": "REFACTOR-002",
+      "title": "Tailwind v4 Design Tokens and UI Primitives",
+      "path": "docs/backlog/refactor/REFACTOR-002_tailwind-v4-design-tokens-and-ui-primitives.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "REFACTOR-001",
+      "title": "App Shell Decomposition and Router Foundation",
+      "path": "docs/backlog/refactor/REFACTOR-001_app-shell-decomposition-and-router-foundation.md",
+      "completedAt": "2026-05-19"
+    },
     {
       "id": "TEST-001",
       "title": "Test Foundation and CI Prep",

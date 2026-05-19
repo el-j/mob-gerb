@@ -86,7 +86,6 @@ export const PcbCanvas = () => {
   const updateTraceVertex = useEditorStore((state) => state.updateTraceVertex)
 
   const pointerRef = useRef<ActivePointer | null>(null)
-  const lastTapRef = useRef<{ elementId: string; time: number } | null>(null)
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -114,7 +113,7 @@ export const PcbCanvas = () => {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [mode, copySelected, pasteCopied, deleteSelected])
+  }, [mode, copySelected, pasteCopied, deleteSelected, cancelLogicalConnection, exitTraceEdit])
 
   const clientToWorld = (clientX: number, clientY: number, svgElement: SVGSVGElement): Coordinate => {
     const rect = svgElement.getBoundingClientRect()
@@ -149,19 +148,13 @@ export const PcbCanvas = () => {
       return
     }
 
-    // Double-tap detection: two taps on same polyline trace within 350ms → enter trace edit
+    // In view mode, tapping a routed polyline enters trace editing quickly.
+    // In trace-edit mode, double-click on another polyline switches the edited trace.
     if (mode === 'VIEW_MODE' || mode === 'EDIT_TRACE_MODE') {
       const element = elements[elementId]
-      const now = Date.now()
-      const last = lastTapRef.current
-      if (last && last.elementId === elementId && now - last.time < 350) {
-        lastTapRef.current = null
-        if (element?.type === 'polyline') {
-          enterTraceEdit(elementId)
-          return
-        }
-      } else {
-        lastTapRef.current = { elementId, time: now }
+      if (element?.type === 'polyline' && (mode === 'VIEW_MODE' || event.detail >= 2)) {
+        enterTraceEdit(elementId)
+        return
       }
       // In EDIT_TRACE_MODE clicking a non-active element exits
       if (mode === 'EDIT_TRACE_MODE' && elementId !== editingTraceId) {
@@ -205,6 +198,19 @@ export const PcbCanvas = () => {
         x: worldPoint.x - element.geom.x,
         y: worldPoint.y - element.geom.y,
       },
+    }
+  }
+
+  const handleElementDoubleClick = (event: MouseEvent<SVGElement>, elementId: string) => {
+    event.stopPropagation()
+
+    if (mode !== 'VIEW_MODE' && mode !== 'EDIT_TRACE_MODE') {
+      return
+    }
+
+    const element = elements[elementId]
+    if (element?.type === 'polyline') {
+      enterTraceEdit(elementId)
     }
   }
 
@@ -457,7 +463,6 @@ export const PcbCanvas = () => {
     }
     const svgEl = event.currentTarget.ownerSVGElement
     if (!svgEl) return
-    const worldPoint = clientToWorld(event.clientX, event.clientY, svgEl)
     pointerRef.current = {
       kind: 'point-drag',
       id: event.pointerId,
@@ -621,6 +626,7 @@ export const PcbCanvas = () => {
           strokeLinejoin="round"
           vectorEffect="non-scaling-stroke"
           onPointerDown={(event) => handleElementPointerDown(event, element.id)}
+          onDoubleClick={(event) => handleElementDoubleClick(event, element.id)}
         />
       )
     }
@@ -644,6 +650,7 @@ export const PcbCanvas = () => {
         strokeLinecap="round"
         vectorEffect="non-scaling-stroke"
         onPointerDown={(event) => handleElementPointerDown(event, element.id)}
+        onDoubleClick={(event) => handleElementDoubleClick(event, element.id)}
       />
     )
   }

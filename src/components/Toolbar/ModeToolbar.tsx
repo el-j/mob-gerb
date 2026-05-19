@@ -19,7 +19,7 @@ export const ModeToolbar = () => {
       {modes.map((entry) => (
         <button
           key={entry}
-          className={(entry === mode ? 'active' : undefined) + ' flex'}
+          className={`ui-btn flex ${entry === mode ? 'active ui-btn--active' : ''}`}
           onClick={() => setMode(entry)}
           type="button"
         >

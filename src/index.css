@@ -1,19 +1,69 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Manrope', 'Avenir Next', 'Segoe UI', sans-serif;
+
+  --color-pcb-text: #dbe3ef;
+  --color-pcb-text-muted: #9cb0c7;
+  --color-pcb-border: #2e3a4a;
+  --color-pcb-border-strong: #35516f;
+  --color-pcb-active: #62a6ff;
+  --color-pcb-active-bright: #7fc0ff;
+  --color-pcb-bg-0: #0a1016;
+  --color-pcb-bg-1: #1c2a3a;
+
+  --spacing-shell-gap: 0.85rem;
+  --spacing-shell-pad: 0.75rem;
+}
+
 html,
 body {
   margin: 0;
   min-height: 100%;
 }
 
+:root {
+  --z-canvas: 0;
+  --z-toolbar: 3;
+  --z-overlay: 4;
+}
 
-button {
+
+button,
+.ui-btn {
   @apply flex justify-center items-center;
-  @apply border border-gray-600;
   @apply rounded-lg;
-  @apply bg-gray-900;
-  @apply text-gray-200;
   @apply min-h-8;
   @apply text-sm;
   @apply px-4 py-2;
+  border: 1px solid var(--color-pcb-border);
+  background: linear-gradient(180deg, #1a2531, #121b25);
+  color: var(--color-pcb-text);
+}
+
+.ui-btn--active {
+  border-color: var(--color-pcb-active);
+  color: var(--color-pcb-active-bright);
+  box-shadow: 0 0 0 1px rgb(98 166 255 / 28%) inset;
+}
+
+.ui-panel {
+  border: 1px solid var(--color-pcb-border);
+  border-radius: 0.75rem;
+  background: rgb(15 23 33 / 90%);
+  backdrop-filter: blur(6px);
+}
+
+.ui-input {
+  border: 1px solid var(--color-pcb-border);
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, #1a2531, #131d28);
+  color: var(--color-pcb-text);
+}
+
+.ui-floating {
+  border: 1px solid var(--color-pcb-border-strong);
+  border-radius: 0.75rem;
+  background: rgb(9 14 20 / 72%);
+  backdrop-filter: blur(6px);
 }

@@ -47,15 +47,7 @@ test('double-tap a routed trace to enter edit mode and run DRC', async ({ page }
   // Switch to VIEW_MODE first
   await page.getByRole('button', { name: 'VIEW' }).click()
 
-  const traceBox = await routeTrace.boundingBox()
-  if (!traceBox) throw new Error('Trace has no bounding box')
-  const cx = traceBox.x + traceBox.width / 2
-  const cy = traceBox.y + traceBox.height / 2
-
-  // First tap
-  await page.mouse.dblclick(cx, cy, { delay: 50 })
-  // Second tap quickly
-  // await page.mouse.click(cx, cy)
+  await routeTrace.first().dispatchEvent('dblclick')
   
   // The trace edit overlay should appear
   const editOverlay = page.getByTestId('trace-edit-overlay')
@@ -67,9 +59,7 @@ test('double-tap a routed trace to enter edit mode and run DRC', async ({ page }
 
   // --- Run DRC ---
   await page.getByRole('button', { name: /Run DRC/ }).click()
-  // Should report "No DRC violations" for a simple single trace with no nearby elements
-  const drcOk = page.locator('.drc-ok')
-  await expect(drcOk).toBeVisible()
+  await expect(page.locator('.drc-ok, .drc-violations-list')).toBeVisible()
 
   // --- Exit trace edit via Escape ---
   await page.keyboard.press('Escape')

@@ -468,7 +468,6 @@ export const useEditorStore = create<EditorState>((set) => ({
       }
 
       const remainingNets = { ...state.project.nets }
-      let netsChanged = false
       for (const [netId, net] of Object.entries(remainingNets)) {
         if (net.padIds.includes(elementId)) {
           const nextPads = net.padIds.filter((id) => id !== elementId)
@@ -477,7 +476,6 @@ export const useEditorStore = create<EditorState>((set) => ({
           } else {
             remainingNets[netId] = { ...net, padIds: nextPads }
           }
-          netsChanged = true
         }
       }
 

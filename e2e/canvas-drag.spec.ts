@@ -5,7 +5,10 @@ test('selects and drags an element in part creator mode', async ({ page }) => {
 
   await page.getByRole('button', { name: 'PART CREATOR' }).click()
 
-  const element = page.getByTestId('element-connector0pin')
+  // THT connector0pin lives in copper0; it also appears in copper1 group due to drill-through.
+  // Pick the instance inside the copper0 layer group to get a unique, canonical reference.
+  const copper0Group = page.locator('[data-testid="layer-group-copper0"]')
+  const element = copper0Group.locator('[data-testid="element-copper0.connector0pin"]')
   await expect(element).toBeVisible()
 
   await element.click()

@@ -6,22 +6,29 @@ test('triggers autorouter and creates a copper trace polyline', async ({ page })
   // Step 1: Enter Part Creator Mode and create two connector pads
   await page.getByRole('button', { name: 'PART CREATOR' }).click()
 
-  // Add Pad 1 and tag it
+  // Add Pad 1 — lands on copper1 (default activeLayer), id = shape-1
   await page.getByRole('button', { name: 'Add Pad (Circle)' }).click()
-  const pad1 = page.getByTestId('element-shape-1')
-  await expect(pad1).toBeVisible()
+  const pad1BeforeTag = page.getByTestId('element-copper1.shape-1')
+  await expect(pad1BeforeTag).toBeVisible()
   await page.getByLabel('Pin').fill('1')
   await page.getByRole('button', { name: 'Tag Through-Hole Pad' }).click()
+
+  // After THT tagging, pad1 moves to copper0; locate it via the copper0 layer group
+  const copper0Group = page.locator('[data-testid="layer-group-copper0"]')
+  const pad1 = copper0Group.locator('[data-testid="element-copper0.shape-1"]')
+  await expect(pad1).toBeVisible()
 
   // Clear selection and copy-paste to create Pad 2
   await page.getByRole('button', { name: 'Clear Selection' }).click()
   await pad1.click()
   await page.keyboard.press('Meta+c')
   await page.keyboard.press('Meta+v')
-  const pad2 = page.getByTestId('element-shape-2')
+
+  // Pad 2 is a copy of a THT connector, so it also lands on copper0, id = shape-2
+  const pad2 = copper0Group.locator('[data-testid="element-copper0.shape-2"]')
   await expect(pad2).toBeVisible()
 
-  // Tag Pad 2
+  // Tag Pad 2 with a different pin
   await page.getByLabel('Pin').fill('2')
   await page.getByRole('button', { name: 'Tag Through-Hole Pad' }).click()
 
@@ -38,16 +45,13 @@ test('triggers autorouter and creates a copper trace polyline', async ({ page })
   await expect(autorouteBtn).toBeEnabled()
   await autorouteBtn.click()
 
-  // The routing overlay should briefly appear
-  // (may be very fast, so we allow it to be gone already)
-
   // Step 4: After routing completes, verify a copper polyline exists
-  // The autorouter returns polylines tagged with role="copper-surface" on copper1
+  // Route polylines land on copper1 (copper-surface layer), testid format: element-copper1.route-*
   await page.waitForFunction(() => {
-    const polylines = document.querySelectorAll('[data-testid^="element-route-"]')
+    const polylines = document.querySelectorAll('[data-testid^="element-copper1.route-"]')
     return polylines.length > 0
   }, { timeout: 5000 })
 
-  const routePolyline = page.locator('[data-testid^="element-route-"]')
+  const routePolyline = page.locator('[data-testid^="element-copper1.route-"]')
   await expect(routePolyline).toBeVisible()
 })

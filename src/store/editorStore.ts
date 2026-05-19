@@ -11,6 +11,8 @@ import type {
   FootprintProject,
   ProjectMetadata,
 } from '../core/types/pcb'
+import { runDrc as runDrcEngine } from '../core/drc/drcEngine'
+import type { DrcViolation } from '../core/drc/drcEngine'
 
 const DEFAULT_GRID_SIZE = 2.54
 const MIN_ZOOM = 0.2
@@ -37,6 +39,9 @@ export type EditorState = {
   pendingNetConnection: string | null
   logicalDraftPointer: Coordinate | null
   isRouting: boolean
+  editingTraceId: string | null
+  drcViolations: DrcViolation[]
+  drcClearanceMm: number
   drawTool: DrawTool
   draftPoints: Coordinate[]
   historyPast: HistorySnapshot[]
@@ -73,6 +78,11 @@ export type EditorState = {
   setLogicalDraftPointer: (point: Coordinate | null) => void
   triggerAutoroute: () => void
   receiveAutorouteResult: (traces: ElementState[]) => void
+  enterTraceEdit: (traceId: string) => void
+  exitTraceEdit: () => void
+  updateTraceVertex: (traceId: string, index: number, point: Coordinate) => void
+  runDrc: () => void
+  setDrcClearance: (mm: number) => void
   setDrawTool: (tool: DrawTool) => void
   addDraftPoint: (point: Coordinate) => void
   finishPolylineDraw: () => void
@@ -327,6 +337,9 @@ export const useEditorStore = create<EditorState>((set) => ({
   pendingNetConnection: null,
   logicalDraftPointer: null,
   isRouting: false,
+  editingTraceId: null,
+  drcViolations: [],
+  drcClearanceMm: 0.2,
   drawTool: 'none',
   draftPoints: [],
   historyPast: [],
@@ -1178,6 +1191,32 @@ export const useEditorStore = create<EditorState>((set) => ({
         })
       }
     }),
+  enterTraceEdit: (traceId) =>
+    set({ editingTraceId: traceId, mode: 'EDIT_TRACE_MODE' }),
+  exitTraceEdit: () =>
+    set({ editingTraceId: null, mode: 'VIEW_MODE' }),
+  updateTraceVertex: (traceId, index, point) =>
+    set((state) => {
+      const el = state.project.elements[traceId]
+      if (!el || el.type !== 'polyline') return state
+      const nextPoints = [...(el.geom.points ?? [])]
+      nextPoints[index] = point
+      return {
+        project: withTouchedProject({
+          ...state.project,
+          elements: {
+            ...state.project.elements,
+            [traceId]: { ...el, geom: { ...el.geom, points: nextPoints } },
+          },
+        }),
+      }
+    }),
+  runDrc: () =>
+    set((state) => ({
+      drcViolations: runDrcEngine(state.project.elements, state.drcClearanceMm),
+    })),
+  setDrcClearance: (mm) =>
+    set({ drcClearanceMm: mm }),
   commitHistory: () =>
     set((state) => {
       const snapshot = createSnapshot(state)

@@ -25,7 +25,7 @@ function App() {
           console.error('[startup] Failed to restore draft', err)
         }
       })
-  }, [])
+  })
 
   return (
     <main className="app-shell">

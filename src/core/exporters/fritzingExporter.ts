@@ -120,10 +120,9 @@ export const exportProjectToFzpXml = (project: FootprintProject): string => {
     const c = el.connector!
     const isTht = c.kind === 'through-hole'
     const typeAttr = isTht ? 'male' : 'pad'
-    
     let pcbViewXml = ''
     if (isTht) {
-      pcbViewXml = `
+      pcbViewXml += `
           <p layer="copper0" svgId="${c.svgId}" terminalId="${c.connectorId}terminal"/>
           <p layer="copper1" svgId="${c.svgId}" terminalId="${c.connectorId}terminal"/>`
     } else {
@@ -147,7 +146,7 @@ export const exportProjectToFzpXml = (project: FootprintProject): string => {
   let layersXml = copperLayers.map(layerId => `        <layer layerId="${layerId}"/>`).join('\n')
   layersXml += '\n        <layer layerId="silkscreen"/>'
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <module fritzingVersion="0.9.3b" moduleId="${project.projectId}">
   <version>1</version>
   <title>${project.metadata.name}</title>
@@ -165,6 +164,8 @@ ${layersXml}
   </connectors>
 </module>
 `
+
+  return xmlContent
 }
 
 export const exportFritzingArchive = async (project: FootprintProject): Promise<Blob> => {

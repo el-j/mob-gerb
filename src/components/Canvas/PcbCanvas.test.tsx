@@ -16,15 +16,20 @@ describe('PcbCanvas state-driven behavior', () => {
   it('renders elements from project state rather than static markup', () => {
     render(<PcbCanvas />)
 
-    expect(screen.getByTestId('element-connector0pin')).toBeInTheDocument()
-    expect(screen.getByTestId('element-silk-outline')).toBeInTheDocument()
+    // THT connectors appear in every copper layer group (correct PCB behavior: the pad drills through all layers)
+    const thtInstances = screen.getAllByTestId('element-copper0.connector0pin')
+    expect(thtInstances.length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByTestId('element-silkscreen.silk-outline')).toBeInTheDocument()
   })
 
   it('selects an element in part creator mode', () => {
     useEditorStore.getState().setMode('PART_CREATOR_MODE')
     render(<PcbCanvas />)
 
-    const target = screen.getByTestId('element-connector0pin')
+    // THT connectors appear in all copper groups; pick the instance inside the copper1 layer group
+    const copper1Group = screen.getByTestId('layer-group-copper1')
+    const target = copper1Group.querySelector('[data-testid="element-copper0.connector0pin"]') as HTMLElement
+    expect(target).not.toBeNull()
     fireEvent.pointerDown(target, { pointerId: 1, clientX: 100, clientY: 100 })
 
     expect(useEditorStore.getState().selectedElementId).toBe('connector0pin')

@@ -88,6 +88,8 @@ export const LayersSidebar: React.FC = () => {
     const selectedEl = selectedId ? elements[selectedId] : null
     if (!selectedEl) return
     const { connector, ...rest } = selectedEl
+    // remove the connector from the element
+    if (!connector) return
     upsertElement({
       ...rest,
       role: selectedEl.pcbLayer === 'silkscreen' ? 'silkscreen' : 'unassigned',
@@ -301,21 +303,21 @@ export const LayersSidebar: React.FC = () => {
               <span className="text-slate-400 font-medium">Active Drawing Layer</span>
               <div className="flex flex-wrap gap-1">
                 {copperLayers.map((layerId) => {
-                  let label = layerId
+                  
                   let btnClass = 'border-white/5 bg-slate-950/20 text-slate-400 hover:border-slate-750'
                   let dotColor = '#da8a3a' // copper1
 
                   if (layerId === 'copper1') {
-                    label = 'Top (copper1)'
+                   
                     if (activeLayer === 'copper1') btnClass = 'bg-orange-500/20 border-orange-500 text-orange-400'
                   } else if (layerId === 'copper0') {
-                    label = 'Bottom (copper0)'
+                   
                     dotColor = '#8f3d03'
                     if (activeLayer === 'copper0') btnClass = 'bg-amber-800/20 border-amber-700 text-amber-400'
                   } else {
                     const match = layerId.match(/^copper(\d+)$/)
                     const num = match ? parseInt(match[1], 10) : 0
-                    label = `Inner ${num - 1} (${layerId})`
+                   
                     
                     const hues = [280, 320, 210, 150, 45, 100, 180, 250, 300, 350]
                     const hue = hues[(num - 2) % hues.length]
@@ -329,6 +331,18 @@ export const LayersSidebar: React.FC = () => {
                     }
                   }
 
+                  const renderCopperLabel = () => {
+                    if (layerId === 'copper1') {
+                      return 'Top (copper1)'
+                    }
+                    if (layerId === 'copper0') {
+                      return 'Bottom (copper0)'
+                    }
+                    const match = layerId.match(/^copper(\d+)$/)
+                    const num = match ? parseInt(match[1], 10) : 0
+                    return `Inner ${num - 1} (${layerId})`
+                  }
+
                   return (
                     <button
                       key={layerId}
@@ -337,7 +351,7 @@ export const LayersSidebar: React.FC = () => {
                       className={`px-2 py-1 rounded border text-[10px] font-semibold transition-all flex items-center gap-1.5 ${btnClass}`}
                     >
                       <span className="w-2 h-2 rounded-full inline-block border border-white/10" style={{ backgroundColor: dotColor }} />
-                      {label}
+                      {renderCopperLabel()}
                     </button>
                   )
                 })}
@@ -389,6 +403,24 @@ export const LayersSidebar: React.FC = () => {
                 emptyPlaceholder = `No inner ${num - 1} copper items`
               }
 
+              const renderLayerSection = () => {
+                return (
+                  <>
+                  <div className={`section-title ${headerClass}`}>
+                    <span>{label}</span>
+                    <span className="section-count">{layerEls.length}</span>
+                  </div>
+                  <div className="section-items">
+                    {layerEls.length === 0 ? (
+                      <div className="empty-section-placeholder">{emptyPlaceholder}</div>
+                    ) : (
+                      layerEls.map(renderElementRow)
+                    )}
+                  </div>
+                  </>
+                )
+              }
+
               return (
                 <div
                   key={layerId}
@@ -401,17 +433,7 @@ export const LayersSidebar: React.FC = () => {
                     setDragOverLayer(null)
                   }}
                 >
-                  <div className={`section-title ${headerClass}`}>
-                    <span>{label}</span>
-                    <span className="section-count">{layerEls.length}</span>
-                  </div>
-                  <div className="section-items">
-                    {layerEls.length === 0 ? (
-                      <div className="empty-section-placeholder">{emptyPlaceholder}</div>
-                    ) : (
-                      layerEls.map(renderElementRow)
-                    )}
-                  </div>
+                  {renderLayerSection()}
                 </div>
               )
             })}

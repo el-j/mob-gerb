@@ -393,7 +393,7 @@ describe('editor store project model', () => {
     state.setLayerCount(4)
     state.setActiveLayer('copper3')
     
-    let updatedState = useEditorStore.getState()
+    const updatedState = useEditorStore.getState()
     expect(updatedState.project.layerCount).toBe(4)
     expect(updatedState.activeLayer).toBe('copper3')
 

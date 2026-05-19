@@ -130,6 +130,14 @@ export const PcbCanvas = () => {
 
   const pointerRef = useRef<ActivePointer | null>(null)
 
+  const [pointerRefState, setPointerRefState] = useState<ActivePointer | null>(null)
+
+  useEffect(() => {
+    if (pointerRef.current !== pointerRefState) {
+      setPointerRefState(pointerRef.current)
+    }
+  }, [pointerRef, pointerRefState])
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.code === 'Space') {
@@ -679,7 +687,7 @@ export const PcbCanvas = () => {
           )}
           <circle
             id={element.connector?.svgId ?? element.id}
-            data-testid={`element-${element.id}`}
+            data-testid={`element-${element.pcbLayer}.${element.id}`}
             data-selected={selected ? 'true' : 'false'}
             data-role={element.role}
             data-layer={element.pcbLayer}
@@ -719,7 +727,7 @@ export const PcbCanvas = () => {
           )}
           <rect
             id={element.connector?.svgId ?? element.id}
-            data-testid={`element-${element.id}`}
+            data-testid={`element-${element.pcbLayer}.${element.id}`}
             data-selected={selected ? 'true' : 'false'}
             data-role={element.role}
             data-layer={element.pcbLayer}
@@ -758,7 +766,7 @@ export const PcbCanvas = () => {
           )}
           <polygon
             id={element.connector?.svgId ?? element.id}
-            data-testid={`element-${element.id}`}
+            data-testid={`element-${element.pcbLayer}.${element.id}`}
             data-selected={selected ? 'true' : 'false'}
             data-role={element.role}
             data-layer={element.pcbLayer}
@@ -781,7 +789,7 @@ export const PcbCanvas = () => {
       return (
         <g
           key={element.id}
-          data-testid={`element-${element.id}`}
+          data-testid={`element-${element.pcbLayer}.${element.id}`}
           data-selected={selected ? 'true' : 'false'}
           data-role={element.role}
           data-layer={element.pcbLayer}
@@ -829,7 +837,7 @@ export const PcbCanvas = () => {
     return (
       <g
         key={element.id}
-        data-testid={`element-${element.id}`}
+        data-testid={`element-${element.pcbLayer}.${element.id}`}
         data-selected={selected ? 'true' : 'false'}
         data-role={element.role}
         data-layer={element.pcbLayer}
@@ -1015,28 +1023,26 @@ export const PcbCanvas = () => {
   const count = project.layerCount ?? 2
   const copperLayers = getCopperLayers(count)
 
-  const renderNestedCopperLayers = (layerIndex: number): React.ReactNode => {
-    if (layerIndex >= copperLayers.length) {
-      return null
-    }
-    const layerId = copperLayers[layerIndex]
-    
-    // THT connectors are drawn on all copper layers
-    const layerElements = visibleElements.filter((element) => {
-      if (element.role === 'connector' && element.connector?.kind === 'through-hole') {
-        return copperLayers.includes(element.pcbLayer)
-      }
-      return element.pcbLayer === layerId
+  /**
+   * Render flat, independent copper layer groups.
+   * THT connectors appear in every copper group as independent copies (correct PCB behavior).
+   * Groups are siblings — never nested inside each other.
+   */
+  const renderCopperLayerGroups = (): React.ReactNode => {
+    return copperLayers.map((layerId) => {
+      const layerElements = visibleElements.filter((element) => {
+        // THT: render a copy in every copper group
+        if (element.role === 'connector' && element.connector?.kind === 'through-hole') {
+          return true
+        }
+        return element.pcbLayer === layerId
+      })
+      return (
+        <g id={layerId} key={layerId} data-testid={`layer-group-${layerId}`}>
+          {layerElements.map(renderElement)}
+        </g>
+      )
     })
-
-    const childNesting = renderNestedCopperLayers(layerIndex + 1)
-
-    return (
-      <g id={layerId} key={layerId}>
-        {layerElements.map(renderElement)}
-        {childNesting}
-      </g>
-    )
   }
 
   const handleWheel = (event: WheelEvent<SVGSVGElement>) => {
@@ -1057,7 +1063,7 @@ export const PcbCanvas = () => {
   return (
     <svg
       viewBox={`0 0 ${GRID_VIEWBOX_SIZE} ${GRID_VIEWBOX_SIZE}`}
-      className={`pcb-canvas ${isSpacePressed ? 'space-grab' : ''} ${pointerRef.current?.kind === 'pan' ? 'space-grabbing' : ''}`}
+      className={`pcb-canvas ${isSpacePressed ? 'space-grab' : ''} ${pointerRefState?.kind === 'pan' ? 'space-grabbing' : ''}`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -1082,7 +1088,7 @@ export const PcbCanvas = () => {
             fill="url(#grid)"
             pointerEvents="none"
           />
-          {renderNestedCopperLayers(0)}
+          {renderCopperLayerGroups()}
           <g id="silkscreen">
             {silkscreenElements.map(renderElement)}
           </g>

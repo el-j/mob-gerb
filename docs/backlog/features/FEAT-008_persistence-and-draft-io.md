@@ -1,8 +1,10 @@
 # FEAT-008: Persistence and Draft I/O
 
-- Status: planned
+- Status: completed
 - Plan-Version: 1
 - Depends on: TEST-001, FEAT-001, FEAT-003, FEAT-005
+- Completed: 2026-05-19
+- Validation: lint ✓ · build 431KB ✓ · 48/48 unit ✓ · 18/18 feature e2e ✓
 
 ## Summary
 

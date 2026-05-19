@@ -4,9 +4,19 @@ type FileControlsProps = {
   onSvgUpload: ChangeEventHandler<HTMLInputElement>
   onFritzingUpload: ChangeEventHandler<HTMLInputElement>
   onExportFritzing: () => void
+  onExportDraft: () => void
+  onImportDraft: ChangeEventHandler<HTMLInputElement>
+  onExportGerbers: () => void
 }
 
-export const FileControls = ({ onSvgUpload, onFritzingUpload, onExportFritzing }: FileControlsProps) => {
+export const FileControls = ({
+  onSvgUpload,
+  onFritzingUpload,
+  onExportFritzing,
+  onExportDraft,
+  onImportDraft,
+  onExportGerbers,
+}: FileControlsProps) => {
   return (
     <div className="flex shrink-0 gap-2 justify-center items-center" aria-label="File controls">
       <label className="file-upload-btn ui-btn">
@@ -18,8 +28,20 @@ export const FileControls = ({ onSvgUpload, onFritzingUpload, onExportFritzing }
         <input type="file" accept=".fzpz,.fzz" onChange={onFritzingUpload} style={{ display: 'none' }} />
       </label>
       <button className="ui-btn" type="button" onClick={onExportFritzing}>
+      <button className="ui-btn" type="button" onClick={onExportFritzing} data-testid="export-fzpz-btn">
         FZPZ
       </button>
+      <label className="file-upload-btn ui-btn" title="Import draft (.pcb-draft.json)">
+        Draft
+        <input type="file" accept=".json" onChange={onImportDraft} style={{ display: 'none' }} />
+      </label>
+      <button className="ui-btn" type="button" onClick={onExportDraft} title="Export draft (.pcb-draft.json)">
+      <button className="ui-btn" type="button" onClick={onExportDraft} title="Export draft (.pcb-draft.json)" data-testid="export-draft-btn">
+        💾
+      </button>
+        <button className="ui-btn" type="button" onClick={onExportGerbers} title="Export Gerbers (.zip)" data-testid="export-gerbers-btn">
+          Gerbers
+        </button>
     </div>
   )
 }

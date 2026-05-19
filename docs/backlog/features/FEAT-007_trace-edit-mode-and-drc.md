@@ -1,8 +1,10 @@
 # FEAT-007: Trace Edit Mode and DRC
 
-- Status: planned
+- Status: completed
 - Plan-Version: 1
 - Depends on: TEST-001, FEAT-002, FEAT-006
+- Completed: 2026-05-19
+- Note: All AC already implemented in prior sessions. Validated via trace-edit.spec.ts (passing) and 6 drcEngine unit tests.
 
 ## Summary
 

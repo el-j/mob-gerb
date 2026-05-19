@@ -15,8 +15,6 @@ const ContentShell = () => {
         <Outlet />
       </main>
       <footer className="app-footer">
-        <span>Workflow: local Claude commands in .claude/commands</span>
-        <span>Backlog: docs/backlog</span>
       </footer>
     </div>
   )

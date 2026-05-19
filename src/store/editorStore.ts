@@ -56,6 +56,7 @@ export type EditorState = {
   addShape: (type: ElementType) => void
   upsertElement: (element: ElementState) => void
   importElements: (elements: ElementState[]) => void
+  importProject: (project: FootprintProject) => void
   removeElement: (elementId: string) => void
   setElementPosition: (elementId: string, position: Coordinate) => void
   selectElement: (elementId: string | null) => void
@@ -433,6 +434,14 @@ export const useEditorStore = create<EditorState>((set) => ({
         }),
         ...setSelectionState([]),
       }
+    }),
+  importProject: (project: FootprintProject) =>
+    set({
+      project,
+      selectedElementId: null,
+      selectedElementIds: [],
+      historyPast: [],
+      historyFuture: [],
     }),
   removeElement: (elementId: string) =>
     set((state) => {

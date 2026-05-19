@@ -2,7 +2,8 @@ import { FileControls } from '../file-io/FileControls'
 import { useProjectFileActions } from '../file-io/useProjectFileActions'
 
 export const AppHeader = () => {
-  const { handleSvgUpload, handleFritzingUpload, handleExportFritzing } = useProjectFileActions()
+  const { handleSvgUpload, handleFritzingUpload, handleExportFritzing, handleExportDraft, handleImportDraft, handleExportGerbers } =
+    useProjectFileActions()
 
   return (
     <header className="app-header flex">
@@ -14,6 +15,9 @@ export const AppHeader = () => {
         onSvgUpload={handleSvgUpload}
         onFritzingUpload={handleFritzingUpload}
         onExportFritzing={handleExportFritzing}
+        onExportDraft={handleExportDraft}
+        onImportDraft={handleImportDraft}
+        onExportGerbers={handleExportGerbers}
       />
     </header>
   )

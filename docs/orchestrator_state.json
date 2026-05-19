@@ -2,40 +2,34 @@
   "baseBranch": "main",
   "openTasks": [
     {
-      "id": "FEAT-007",
-      "title": "Trace Edit Mode and DRC",
-      "path": "docs/backlog/features/FEAT-007_trace-edit-mode-and-drc.md",
-      "type": "feature",
-      "status": "blocked",
-      "dependencies": ["TEST-001", "FEAT-002", "FEAT-006"]
-    },
-    {
-      "id": "FEAT-008",
-      "title": "Persistence and Draft I/O",
-      "path": "docs/backlog/features/FEAT-008_persistence-and-draft-io.md",
-      "type": "feature",
-      "status": "blocked",
-      "dependencies": ["TEST-001", "FEAT-001", "FEAT-003", "FEAT-005"]
-    },
-    {
-      "id": "FEAT-009",
-      "title": "Gerber and Excellon Export",
-      "path": "docs/backlog/features/FEAT-009_gerber-and-excellon-export.md",
-      "type": "feature",
-      "status": "blocked",
-      "dependencies": ["TEST-001", "FEAT-004", "FEAT-006", "FEAT-007"]
-    },
-    {
       "id": "TEST-002",
       "title": "Full Playwright and GitHub Actions",
       "path": "docs/backlog/tests/TEST-002_full-playwright-and-github-actions.md",
       "type": "test",
-      "status": "blocked",
+      "status": "ready",
       "dependencies": ["TEST-001", "FEAT-003", "FEAT-004", "FEAT-006", "FEAT-007", "FEAT-008", "FEAT-009"]
     }
   ],
   "blockedTasks": [],
   "completedTasks": [
+    {
+      "id": "FEAT-009",
+      "title": "Gerber and Excellon Export",
+      "path": "docs/backlog/features/FEAT-009_gerber-and-excellon-export.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-008",
+      "title": "Persistence and Draft I/O",
+      "path": "docs/backlog/features/FEAT-008_persistence-and-draft-io.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-007",
+      "title": "Trace Edit Mode and DRC",
+      "path": "docs/backlog/features/FEAT-007_trace-edit-mode-and-drc.md",
+      "completedAt": "2026-05-19"
+    },
     {
       "id": "TEST-003",
       "title": "Style and Interaction Regression Guards",

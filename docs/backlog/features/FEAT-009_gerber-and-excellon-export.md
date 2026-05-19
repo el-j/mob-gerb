@@ -1,6 +1,8 @@
 # FEAT-009: Gerber and Excellon Export
 
-- Status: planned
+- Status: completed
+- Completed: 2026-05-19
+- Validation: lint ✓ · build 434KB ✓ · 57/57 unit ✓ · 18/18 feature e2e ✓
 - Plan-Version: 1
 - Depends on: TEST-001, FEAT-004, FEAT-006, FEAT-007
 

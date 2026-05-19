@@ -17,6 +17,7 @@
     "test:ci": "npm run lint && npm run build && npm run test && npm run test:e2e:smoke && npm run test:e2e:feature"
   },
   "dependencies": {
+    "jszip": "^3.10.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "zustand": "^5.0.13"

@@ -2,6 +2,8 @@ import { useState } from 'react'
 
 import { PcbCanvas } from './components/Canvas/PcbCanvas'
 import { ModeToolbar } from './components/Toolbar/ModeToolbar'
+import { exportFritzingArchive } from './core/exporters/fritzingExporter'
+import { parseFritzingArchive, parseSvg } from './core/parsers/fritzingParser'
 import { useEditorStore } from './store/editorStore'
 
 import './App.css'
@@ -22,6 +24,8 @@ function App() {
   const selectElement = useEditorStore((state) => state.selectElement)
   const combineSelectedElements = useEditorStore((state) => state.combineSelectedElements)
   const splitComposite = useEditorStore((state) => state.splitComposite)
+  const importElements = useEditorStore((state) => state.importElements)
+  const project = useEditorStore((state) => state.project)
   const setOutlinePadding = useEditorStore((state) => state.setOutlinePadding)
   const setSelectedFill = useEditorStore((state) => state.setSelectedFill)
   const setSelectedStrokeWidth = useEditorStore((state) => state.setSelectedStrokeWidth)
@@ -32,11 +36,55 @@ function App() {
   const applyTagToSelected = useEditorStore((state) => state.applyTagToSelected)
   const zoomBy = useEditorStore((state) => state.zoomBy)
   const resetView = useEditorStore((state) => state.resetView)
+  const isRouting = useEditorStore((state) => state.isRouting)
+  const triggerAutoroute = useEditorStore((state) => state.triggerAutoroute)
+  const nets = useEditorStore((state) => state.project.nets)
 
   const [pinInput, setPinInput] = useState('1')
 
   const parsedPin = Number(pinInput)
   const requestedPin = Number.isFinite(parsedPin) && parsedPin > 0 ? parsedPin : undefined
+
+  const handleSvgUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    try {
+      const elements = await parseSvg(file)
+      importElements(elements)
+    } catch (err) {
+      console.error('Failed to parse SVG', err)
+      alert('Failed to parse SVG')
+    }
+    event.target.value = ''
+  }
+
+  const handleFritzingUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    try {
+      const elements = await parseFritzingArchive(file)
+      importElements(elements)
+    } catch (err) {
+      console.error('Failed to parse Fritzing archive', err)
+      alert('Failed to parse Fritzing archive')
+    }
+    event.target.value = ''
+  }
+
+  const handleExportFritzing = async () => {
+    try {
+      const blob = await exportFritzingArchive(project)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `part.${project.projectId}.fzpz`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Failed to export', err)
+      alert('Failed to export')
+    }
+  }
 
   return (
     <main className="app-shell">
@@ -54,6 +102,20 @@ function App() {
 
       <section className="top-controls">
         <ModeToolbar />
+
+        <div className="file-controls" aria-label="File controls">
+          <label className="file-upload-btn">
+            Import SVG
+            <input type="file" accept=".svg" onChange={handleSvgUpload} style={{ display: 'none' }} />
+          </label>
+          <label className="file-upload-btn">
+            Import FZPZ
+            <input type="file" accept=".fzpz,.fzz" onChange={handleFritzingUpload} style={{ display: 'none' }} />
+          </label>
+          <button type="button" onClick={handleExportFritzing}>
+            Export FZPZ
+          </button>
+        </div>
 
         <div className="camera-controls" aria-label="Camera controls">
           <button type="button" onClick={() => zoomBy(-0.1)}>
@@ -229,6 +291,25 @@ function App() {
               {selectedElement.connector ? ` | Connector: ${selectedElement.connector.connectorId}` : ''}
             </p>
           ) : null}
+        </section>
+      ) : null}
+
+      {mode === 'LOGICAL_MODE' ? (
+        <section className="creator-panel" aria-label="Logical mode controls">
+          <div className="shape-row">
+            <span style={{ opacity: 0.7 }}>
+              Click two connector pads to create a logical net. Press <kbd>Esc</kbd> to cancel.
+            </span>
+            <button
+              id="autoroute-btn"
+              type="button"
+              onClick={triggerAutoroute}
+              disabled={isRouting || Object.keys(nets).length === 0}
+              style={isRouting ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            >
+              {isRouting ? '⏳ Routing…' : '⚡ Autoroute Nets'}
+            </button>
+          </div>
         </section>
       ) : null}
 

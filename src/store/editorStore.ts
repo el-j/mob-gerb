@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import AutorouterWorker from '../workers/autorouter.worker?worker'
+import type { AutorouterRequest, AutorouterResponse } from '../workers/autorouter.protocol'
 
 import { boundsFromElement, boundsToRect, inflateBounds, unionBounds } from '../core/math/geometry'
 import type {
@@ -31,6 +33,10 @@ export type EditorState = {
   project: FootprintProject
   selectedElementId: string | null
   selectedElementIds: string[]
+  clipboard: ElementState[]
+  pendingNetConnection: string | null
+  logicalDraftPointer: Coordinate | null
+  isRouting: boolean
   drawTool: DrawTool
   draftPoints: Coordinate[]
   historyPast: HistorySnapshot[]
@@ -44,6 +50,7 @@ export type EditorState = {
   setProjectMetadata: (metadata: Partial<ProjectMetadata>) => void
   addShape: (type: ElementType) => void
   upsertElement: (element: ElementState) => void
+  importElements: (elements: ElementState[]) => void
   removeElement: (elementId: string) => void
   setElementPosition: (elementId: string, position: Coordinate) => void
   selectElement: (elementId: string | null) => void
@@ -55,6 +62,17 @@ export type EditorState = {
   setSelectedStrokeWidth: (width: number) => void
   updateSelectedPolylinePoint: (index: number, point: Coordinate) => void
   updateSelectedPointFromWorld: (index: number, point: Coordinate) => void
+  addPointToSelectedShape: (index: number, point: Coordinate) => void
+  removePointFromSelectedShape: (index: number) => void
+  copySelected: () => void
+  pasteCopied: () => void
+  deleteSelected: () => void
+  startLogicalConnection: (elementId: string) => void
+  completeLogicalConnection: (elementId: string) => void
+  cancelLogicalConnection: () => void
+  setLogicalDraftPointer: (point: Coordinate | null) => void
+  triggerAutoroute: () => void
+  receiveAutorouteResult: (traces: ElementState[]) => void
   setDrawTool: (tool: DrawTool) => void
   addDraftPoint: (point: Coordinate) => void
   finishPolylineDraw: () => void
@@ -305,6 +323,10 @@ export const useEditorStore = create<EditorState>((set) => ({
   project: createInitialProject(),
   selectedElementId: null,
   selectedElementIds: [],
+  clipboard: [],
+  pendingNetConnection: null,
+  logicalDraftPointer: null,
+  isRouting: false,
   drawTool: 'none',
   draftPoints: [],
   historyPast: [],
@@ -385,7 +407,21 @@ export const useEditorStore = create<EditorState>((set) => ({
         },
       }),
     })),
-  removeElement: (elementId) =>
+  importElements: (elements: ElementState[]) =>
+    set((state) => {
+      const nextElements: Record<string, ElementState> = {}
+      for (const el of elements) {
+        nextElements[el.id] = el
+      }
+      return {
+        project: withTouchedProject({
+          ...state.project,
+          elements: nextElements,
+        }),
+        ...setSelectionState([]),
+      }
+    }),
+  removeElement: (elementId: string) =>
     set((state) => {
       const remainingElements = { ...state.project.elements }
       const element = remainingElements[elementId]
@@ -418,6 +454,20 @@ export const useEditorStore = create<EditorState>((set) => ({
         }
       }
 
+      const remainingNets = { ...state.project.nets }
+      let netsChanged = false
+      for (const [netId, net] of Object.entries(remainingNets)) {
+        if (net.padIds.includes(elementId)) {
+          const nextPads = net.padIds.filter((id) => id !== elementId)
+          if (nextPads.length < 2) {
+            delete remainingNets[netId]
+          } else {
+            remainingNets[netId] = { ...net, padIds: nextPads }
+          }
+          netsChanged = true
+        }
+      }
+
       const nextSelection = state.selectedElementIds.filter((id) => id !== elementId)
       const selectedGroup = element?.type === 'group' ? element.children ?? [] : []
 
@@ -425,6 +475,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         project: withTouchedProject({
           ...state.project,
           elements: remainingElements,
+          nets: remainingNets,
         }),
         ...setSelectionState(nextSelection.filter((id) => !selectedGroup.includes(id))),
       }
@@ -741,6 +792,83 @@ export const useEditorStore = create<EditorState>((set) => ({
         }),
       }
     }),
+  addPointToSelectedShape: (index, point) =>
+    set((state) => {
+      const selectedId = state.selectedElementId
+      if (!selectedId) {
+        return state
+      }
+
+      const current = state.project.elements[selectedId]
+      if (!current || (current.type !== 'polyline' && current.type !== 'polygon')) {
+        return state
+      }
+
+      const points = [...(current.geom.points ?? [])]
+      points.splice(index, 0, {
+        x: point.x - current.geom.x,
+        y: point.y - current.geom.y,
+      })
+
+      return {
+        project: withTouchedProject({
+          ...state.project,
+          elements: {
+            ...state.project.elements,
+            [selectedId]: {
+              ...current,
+              geom: {
+                ...current.geom,
+                points,
+              },
+            },
+          },
+        }),
+      }
+    }),
+  removePointFromSelectedShape: (index) =>
+    set((state) => {
+      const selectedId = state.selectedElementId
+      if (!selectedId) {
+        return state
+      }
+
+      const current = state.project.elements[selectedId]
+      if (!current || (current.type !== 'polyline' && current.type !== 'polygon')) {
+        return state
+      }
+
+      const points = [...(current.geom.points ?? [])]
+
+      if (current.type === 'polygon' && points.length <= 3) {
+        return state
+      }
+      if (current.type === 'polyline' && points.length <= 2) {
+        return state
+      }
+
+      if (index < 0 || index >= points.length) {
+        return state
+      }
+
+      points.splice(index, 1)
+
+      return {
+        project: withTouchedProject({
+          ...state.project,
+          elements: {
+            ...state.project.elements,
+            [selectedId]: {
+              ...current,
+              geom: {
+                ...current.geom,
+                points,
+              },
+            },
+          },
+        }),
+      }
+    }),
   setDrawTool: (tool) =>
     set(() => ({
       drawTool: tool,
@@ -824,6 +952,230 @@ export const useEditorStore = create<EditorState>((set) => ({
             [selectedId]: nextElement,
           },
         }),
+      }
+    }),
+  copySelected: () =>
+    set((state) => {
+      const copied = state.selectedElementIds
+        .map((id) => state.project.elements[id])
+        .filter((el): el is ElementState => el !== undefined)
+      return { clipboard: copied }
+    }),
+  pasteCopied: () =>
+    set((state) => {
+      if (state.clipboard.length === 0) return state
+
+      const nextElements = { ...state.project.elements }
+      const newSelectedIds: string[] = []
+      const idMap = new Map<string, string>()
+
+      for (const element of state.clipboard) {
+        const newId = element.type === 'group' ? nextGroupId(nextElements) : nextShapeId(nextElements)
+        idMap.set(element.id, newId)
+        
+        const clone: ElementState = {
+          ...element,
+          id: newId,
+          geom: {
+            ...element.geom,
+            x: element.geom.x + state.gridSize,
+            y: element.geom.y + state.gridSize,
+            points: element.geom.points?.map(p => ({...p})),
+          },
+        }
+
+        if (element.role === 'connector') {
+          const pin = nextConnectorPin(nextElements)
+          clone.connector = {
+            kind: element.connector!.kind,
+            pin,
+            connectorId: `connector${pin}`,
+            svgId: `connector${pin}pin`,
+          }
+        }
+
+        nextElements[newId] = clone
+        newSelectedIds.push(newId)
+      }
+
+      for (const newId of newSelectedIds) {
+        const element = nextElements[newId]
+        if (element.groupId) {
+          element.groupId = idMap.get(element.groupId) ?? null
+        }
+        if (element.children) {
+          element.children = element.children.map(childId => idMap.get(childId) ?? childId)
+        }
+      }
+
+      const topLevelSelection = newSelectedIds.filter(id => !nextElements[id].groupId)
+
+      return {
+        project: withTouchedProject({
+          ...state.project,
+          elements: nextElements,
+        }),
+        ...setSelectionState(topLevelSelection),
+      }
+    }),
+  deleteSelected: () =>
+    set((state) => {
+      if (state.selectedElementIds.length === 0) return state
+
+      const remainingElements = { ...state.project.elements }
+      
+      for (const elementId of state.selectedElementIds) {
+        const element = remainingElements[elementId]
+        if (!element) continue
+        
+        delete remainingElements[elementId]
+
+        if (element.type === 'group') {
+          for (const childId of element.children ?? []) {
+            delete remainingElements[childId]
+          }
+        } else if (element.groupId) {
+          const parent = remainingElements[element.groupId]
+          if (parent?.type === 'group') {
+            const nextChildren = (parent.children ?? []).filter((childId) => childId !== elementId)
+            if (nextChildren.length === 0) {
+              delete remainingElements[parent.id]
+            } else {
+              remainingElements[parent.id] = recomputeGroupGeometry({
+                ...parent,
+                children: nextChildren,
+              }, remainingElements)
+            }
+          }
+        }
+      }
+
+      const remainingNets = { ...state.project.nets }
+      for (const [netId, net] of Object.entries(remainingNets)) {
+        const nextPads = net.padIds.filter((id) => !state.selectedElementIds.includes(id))
+        if (nextPads.length !== net.padIds.length) {
+          if (nextPads.length < 2) {
+            delete remainingNets[netId]
+          } else {
+            remainingNets[netId] = { ...net, padIds: nextPads }
+          }
+        }
+      }
+
+      return {
+        project: withTouchedProject({
+          ...state.project,
+          elements: remainingElements,
+          nets: remainingNets,
+        }),
+        ...setSelectionState([]),
+      }
+    }),
+  startLogicalConnection: (elementId) =>
+    set((state) => {
+      const el = state.project.elements[elementId]
+      if (!el || el.role !== 'connector') return state
+      return { pendingNetConnection: elementId, logicalDraftPointer: null }
+    }),
+  completeLogicalConnection: (elementId) =>
+    set((state) => {
+      if (!state.pendingNetConnection || state.pendingNetConnection === elementId) {
+        return { pendingNetConnection: null, logicalDraftPointer: null }
+      }
+      const el1 = state.project.elements[state.pendingNetConnection]
+      const el2 = state.project.elements[elementId]
+      if (!el1 || !el2 || el1.role !== 'connector' || el2.role !== 'connector') {
+        return { pendingNetConnection: null, logicalDraftPointer: null }
+      }
+
+      const nets = { ...state.project.nets }
+      let net1Id: string | null = null
+      let net2Id: string | null = null
+
+      for (const [netId, net] of Object.entries(nets)) {
+        if (net.padIds.includes(el1.id)) net1Id = netId
+        if (net.padIds.includes(el2.id)) net2Id = netId
+      }
+
+      if (net1Id && net2Id) {
+        if (net1Id === net2Id) {
+          return { pendingNetConnection: null, logicalDraftPointer: null }
+        }
+        const mergedPadIds = Array.from(new Set([...nets[net1Id].padIds, ...nets[net2Id].padIds]))
+        nets[net1Id] = { ...nets[net1Id], padIds: mergedPadIds }
+        delete nets[net2Id]
+      } else if (net1Id) {
+        nets[net1Id] = { ...nets[net1Id], padIds: [...nets[net1Id].padIds, el2.id] }
+      } else if (net2Id) {
+        nets[net2Id] = { ...nets[net2Id], padIds: [...nets[net2Id].padIds, el1.id] }
+      } else {
+        const maxNetId = Object.keys(nets)
+          .map(id => { const m = id.match(/^net-(\d+)$/); return m ? Number(m[1]) : 0 })
+          .reduce((a, b) => Math.max(a, b), 0)
+        const newNetId = `net-${maxNetId + 1}`
+        nets[newNetId] = { id: newNetId, padIds: [el1.id, el2.id] }
+      }
+
+      return {
+        project: withTouchedProject({
+          ...state.project,
+          nets,
+        }),
+        pendingNetConnection: null,
+        logicalDraftPointer: null,
+      }
+    }),
+  cancelLogicalConnection: () =>
+    set({ pendingNetConnection: null, logicalDraftPointer: null }),
+  setLogicalDraftPointer: (point) =>
+    set({ logicalDraftPointer: point }),
+  triggerAutoroute: () => {
+    set({ isRouting: true, mode: 'ROUTING_MODE' })
+    const state = useEditorStore.getState()
+    
+    // Lazy initialize worker
+    const worker = new AutorouterWorker()
+    worker.onmessage = (e: MessageEvent<AutorouterResponse>) => {
+      if (e.data.type === 'ROUTE_SUCCESS') {
+        useEditorStore.getState().receiveAutorouteResult(e.data.traces)
+      } else {
+        console.error('Autorouting failed', e.data)
+        useEditorStore.getState().receiveAutorouteResult([])
+      }
+      worker.terminate()
+    }
+    
+    worker.postMessage({
+      type: 'ROUTE_REQUEST',
+      gridSize: state.gridSize,
+      elements: state.project.elements,
+      nets: state.project.nets
+    } as AutorouterRequest)
+  },
+  receiveAutorouteResult: (traces) =>
+    set((state) => {
+      if (!state.isRouting) return state // Ignore stale responses
+      
+      const nextElements = { ...state.project.elements }
+      
+      // We can clear existing routes first if we want, or just insert the new ones
+      for (const [id, el] of Object.entries(nextElements)) {
+        if (el.role === 'copper-surface' && el.type === 'polyline' && el.id.startsWith('route-')) {
+          delete nextElements[id]
+        }
+      }
+      
+      for (const trace of traces) {
+        nextElements[trace.id] = trace
+      }
+      
+      return {
+        isRouting: false,
+        mode: 'VIEW_MODE',
+        project: withTouchedProject({
+          ...state.project,
+          elements: nextElements
+        })
       }
     }),
   commitHistory: () =>

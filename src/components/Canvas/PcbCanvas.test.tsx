@@ -57,4 +57,34 @@ describe('PcbCanvas state-driven behavior', () => {
     expect(screen.getByTestId('point-handle-0')).toBeInTheDocument()
     expect(screen.getByTestId('point-handle-1')).toBeInTheDocument()
   })
+
+  it('renders midpoint handles and allows double click removal', () => {
+    const state = useEditorStore.getState()
+    state.setMode('PART_CREATOR_MODE')
+    state.setDrawTool('polyline')
+    state.addDraftPoint({ x: 10, y: 10 })
+    state.addDraftPoint({ x: 12, y: 12 })
+    state.addDraftPoint({ x: 15, y: 10 })
+    state.finishPolylineDraw()
+
+    render(<PcbCanvas />)
+
+    expect(screen.getByTestId('point-handles')).toBeInTheDocument()
+    expect(screen.getByTestId('point-handle-0')).toBeInTheDocument()
+    expect(screen.getByTestId('point-handle-1')).toBeInTheDocument()
+    expect(screen.getByTestId('point-handle-2')).toBeInTheDocument()
+    expect(screen.getByTestId('midpoint-handle-0')).toBeInTheDocument()
+    expect(screen.getByTestId('midpoint-handle-1')).toBeInTheDocument()
+
+    const midpoint = screen.getByTestId('midpoint-handle-0')
+    fireEvent.pointerDown(midpoint, { pointerId: 1, clientX: 100, clientY: 100 })
+    
+    const shape = useEditorStore.getState().project.elements['shape-1']
+    expect(shape.geom.points).toHaveLength(4)
+
+    const point = screen.getByTestId('point-handle-1')
+    fireEvent.doubleClick(point)
+
+    expect(useEditorStore.getState().project.elements['shape-1'].geom.points).toHaveLength(3)
+  })
 })

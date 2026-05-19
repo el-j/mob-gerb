@@ -1,16 +1,16 @@
 # FEAT-004: Fritzing Import and Part Export
 
-- Status: planned
+- Status: completed
 - Plan-Version: 1
 - Depends on: TEST-001, FEAT-001, FEAT-003
 
 ## Summary
 
-Implement the Fritzing bridge: archive parsing for `.fzz` and `.fzpz`, XML and SVG extraction, connector-to-SVG mapping, and part export for the footprint creator as valid `.fzp` plus SVG content bundled into `.fzpz`.
+Implement the Fritzing bridge: archive parsing for `.fzz` and `.fzpz`, XML and SVG extraction, connector-to-SVG mapping, and part export for the footprint creator. Also implement standalone `.svg` file uploads, which share the SVG parsing engine.
 
 ## Scope
 
-- In scope: archive read/write helpers, DOMParser adapters, extracted domain models, PCB SVG layer ingestion, `.fzp` compilation from tagged state, download-ready part bundle generation.
+- In scope: archive read/write helpers (`jszip`), DOMParser adapters, extracted domain models, PCB SVG layer ingestion, standalone `.svg` upload logic, `.fzp` compilation from tagged state, download-ready part bundle generation.
 - Out of scope: Gerber export, autorouting, full PCB sketch editing semantics beyond import display.
 
 ## Acceptance criteria

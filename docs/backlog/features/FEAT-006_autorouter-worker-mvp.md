@@ -1,6 +1,6 @@
 # FEAT-006: Autorouter Worker MVP
 
-- Status: planned
+- Status: completed
 - Plan-Version: 1
 - Depends on: TEST-001, FEAT-001, FEAT-005
 

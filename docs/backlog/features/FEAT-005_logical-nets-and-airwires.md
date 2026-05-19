@@ -1,6 +1,6 @@
 # FEAT-005: Logical Nets and Airwires
 
-- Status: planned
+- Status: completed
 - Plan-Version: 1
 - Depends on: TEST-001, FEAT-001, FEAT-002, FEAT-004
 

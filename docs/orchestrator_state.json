@@ -1,0 +1,118 @@
+{
+  "baseBranch": "main",
+  "openTasks": [
+    {
+      "id": "FEAT-007",
+      "title": "Trace Edit Mode and DRC",
+      "path": "docs/backlog/features/FEAT-007_trace-edit-mode-and-drc.md",
+      "type": "feature",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-002", "FEAT-006"]
+    },
+    {
+      "id": "FEAT-008",
+      "title": "Persistence and Draft I/O",
+      "path": "docs/backlog/features/FEAT-008_persistence-and-draft-io.md",
+      "type": "feature",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-001", "FEAT-003", "FEAT-005"]
+    },
+    {
+      "id": "FEAT-009",
+      "title": "Gerber and Excellon Export",
+      "path": "docs/backlog/features/FEAT-009_gerber-and-excellon-export.md",
+      "type": "feature",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-004", "FEAT-006", "FEAT-007"]
+    },
+    {
+      "id": "TEST-002",
+      "title": "Full Playwright and GitHub Actions",
+      "path": "docs/backlog/tests/TEST-002_full-playwright-and-github-actions.md",
+      "type": "test",
+      "status": "blocked",
+      "dependencies": ["TEST-001", "FEAT-003", "FEAT-004", "FEAT-006", "FEAT-007", "FEAT-008", "FEAT-009"]
+  ],
+  "blockedTasks": [],
+  "completedTasks": [
+    {
+      "id": "TEST-001",
+      "title": "Test Foundation and CI Prep",
+      "path": "docs/backlog/tests/TEST-001_test-foundation-and-ci-prep.md",
+      "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-001",
+      "title": "Project State and History Model",
+      "path": "docs/backlog/features/FEAT-001_project-state-and-history-model.md",
+      "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-002",
+      "title": "State-Driven Canvas and Selection",
+      "path": "docs/backlog/features/FEAT-002_state-driven-canvas-and-selection.md",
+      "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-003",
+      "title": "Footprint Drawing and Tagging",
+      "path": "docs/backlog/features/FEAT-003_footprint-drawing-and-tagging.md",
+      "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-010",
+      "title": "Part Creator Composites, Selection, and Outline Editing",
+      "path": "docs/backlog/features/FEAT-010_part-creator-composites-selection-and-outline-editing.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-011",
+      "title": "SVG Editor Engine Decision and Adoption Strategy",
+      "path": "docs/backlog/features/FEAT-011_svg-editor-engine-decision-and-adoption-strategy.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-012",
+      "title": "Part Creator Mobile UX and Drawing Controls",
+      "path": "docs/backlog/features/FEAT-012_part-creator-mobile-ux-and-drawing-controls.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-013",
+      "title": "On-Canvas Point Handle Editing",
+      "path": "docs/backlog/features/FEAT-013_on-canvas-point-handle-editing.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-014",
+      "title": "Polygon Add/Remove Points On-Canvas",
+      "path": "docs/backlog/features/FEAT-014_polygon-add-remove-points-on-canvas.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-004",
+      "title": "Fritzing Import and Part Export",
+      "path": "docs/backlog/features/FEAT-004_fritzing-import-and-part-export.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-015",
+      "title": "Copy, Paste, and Delete",
+      "path": "docs/backlog/features/FEAT-015_copy-paste-delete.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-005",
+      "title": "Logical Nets and Airwires",
+      "path": "docs/backlog/features/FEAT-005_logical-nets-and-airwires.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-006",
+      "title": "Autorouter Worker MVP",
+      "path": "docs/backlog/features/FEAT-006_autorouter-worker-mvp.md",
+      "completedAt": "2026-05-19"
+    }
+  ],
+  "updatedAt": "2026-05-19"
+}

@@ -24,6 +24,18 @@ test('supports free draw, selection visibility, style edits, and quick 1:1 reset
   await expect(polyline).toHaveAttribute('data-selected', 'true')
   await expect(page.getByTestId('selection-box')).toBeVisible()
 
+  const pointHandle = page.getByTestId('point-handle-1')
+  await expect(pointHandle).toBeVisible()
+  const handleBox = await pointHandle.boundingBox()
+  if (!handleBox) {
+    throw new Error('Expected point handle bounding box')
+  }
+
+  await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(handleBox.x + handleBox.width / 2 + 35, handleBox.y + handleBox.height / 2 - 10)
+  await page.mouse.up()
+
   const strokeInput = page.getByRole('spinbutton', { name: 'Stroke' })
   await strokeInput.fill('1.8')
   await expect(polyline).toHaveAttribute('data-selected', 'true')

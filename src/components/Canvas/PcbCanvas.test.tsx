@@ -42,4 +42,19 @@ describe('PcbCanvas state-driven behavior', () => {
     expect(useEditorStore.getState().draftPoints).toHaveLength(1)
     expect(screen.getByTestId('draft-polyline')).toBeInTheDocument()
   })
+
+  it('shows point handles for selected point-based shapes', () => {
+    const state = useEditorStore.getState()
+    state.setMode('PART_CREATOR_MODE')
+    state.setDrawTool('polyline')
+    state.addDraftPoint({ x: 10, y: 10 })
+    state.addDraftPoint({ x: 12, y: 12 })
+    state.finishPolylineDraw()
+
+    render(<PcbCanvas />)
+
+    expect(screen.getByTestId('point-handles')).toBeInTheDocument()
+    expect(screen.getByTestId('point-handle-0')).toBeInTheDocument()
+    expect(screen.getByTestId('point-handle-1')).toBeInTheDocument()
+  })
 })

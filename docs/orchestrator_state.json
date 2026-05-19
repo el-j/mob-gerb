@@ -101,6 +101,12 @@
       "title": "Part Creator Mobile UX and Drawing Controls",
       "path": "docs/backlog/features/FEAT-012_part-creator-mobile-ux-and-drawing-controls.md",
       "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-013",
+      "title": "On-Canvas Point Handle Editing",
+      "path": "docs/backlog/features/FEAT-013_on-canvas-point-handle-editing.md",
+      "completedAt": "2026-05-19"
     }
   ],
   "updatedAt": "2026-05-19"

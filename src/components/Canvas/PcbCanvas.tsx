@@ -19,7 +19,14 @@ type DragPointer = {
   offset: Coordinate
 }
 
-type ActivePointer = PanPointer | DragPointer
+type PointDragPointer = {
+  kind: 'point-drag'
+  id: number
+  elementId: string
+  pointIndex: number
+}
+
+type ActivePointer = PanPointer | DragPointer | PointDragPointer
 
 const GRID_VIEWBOX_SIZE = 120
 
@@ -56,6 +63,7 @@ export const PcbCanvas = () => {
   const selectElement = useEditorStore((state) => state.selectElement)
   const toggleElementSelection = useEditorStore((state) => state.toggleElementSelection)
   const setElementPosition = useEditorStore((state) => state.setElementPosition)
+  const updateSelectedPointFromWorld = useEditorStore((state) => state.updateSelectedPointFromWorld)
   const addDraftPoint = useEditorStore((state) => state.addDraftPoint)
 
   const pointerRef = useRef<ActivePointer | null>(null)
@@ -173,6 +181,10 @@ export const PcbCanvas = () => {
     }
 
     if (activePointer.kind !== 'drag' || mode !== 'PART_CREATOR_MODE') {
+      if (activePointer.kind === 'point-drag' && mode === 'PART_CREATOR_MODE') {
+        const worldPoint = clientToWorld(event.clientX, event.clientY, event.currentTarget)
+        updateSelectedPointFromWorld(activePointer.pointIndex, snapCoordinate(worldPoint, gridSize))
+      }
       return
     }
 
@@ -183,6 +195,31 @@ export const PcbCanvas = () => {
     }
 
     setElementPosition(activePointer.elementId, snapCoordinate(rawPosition, gridSize))
+  }
+
+  const handlePointHandlePointerDown = (
+    event: PointerEvent<SVGCircleElement>,
+    elementId: string,
+    pointIndex: number,
+  ) => {
+    event.stopPropagation()
+
+    if (mode !== 'PART_CREATOR_MODE') {
+      return
+    }
+
+    selectElement(elementId)
+
+    if (typeof event.currentTarget.setPointerCapture === 'function') {
+      event.currentTarget.setPointerCapture(event.pointerId)
+    }
+
+    pointerRef.current = {
+      kind: 'point-drag',
+      id: event.pointerId,
+      elementId,
+      pointIndex,
+    }
   }
 
   const handlePointerUp = (event: PointerEvent<SVGSVGElement>) => {
@@ -390,6 +427,37 @@ export const PcbCanvas = () => {
     )
   }
 
+  const renderPointHandles = () => {
+    if (!selectedElementId) {
+      return null
+    }
+
+    const element = elements[selectedElementId]
+    if (!element || (element.type !== 'polyline' && element.type !== 'polygon')) {
+      return null
+    }
+
+    const points = element.geom.points ?? []
+    return (
+      <g data-testid="point-handles">
+        {points.map((point, index) => (
+          <circle
+            key={`${element.id}-point-${index}`}
+            data-testid={`point-handle-${index}`}
+            cx={element.geom.x + point.x}
+            cy={element.geom.y + point.y}
+            r={0.65}
+            fill="#ffffff"
+            stroke="#0b1117"
+            strokeWidth={0.2}
+            vectorEffect="non-scaling-stroke"
+            onPointerDown={(event) => handlePointHandlePointerDown(event, element.id, index)}
+          />
+        ))}
+      </g>
+    )
+  }
+
   const copper0Elements = Object.values(elements).filter((element) => element.pcbLayer === 'copper0')
   const copper1Elements = Object.values(elements).filter((element) => element.pcbLayer === 'copper1')
   const silkscreenElements = Object.values(elements).filter((element) => element.pcbLayer === 'silkscreen')
@@ -452,6 +520,7 @@ export const PcbCanvas = () => {
             />
           ) : null}
           {renderSelectionBox()}
+          {renderPointHandles()}
           {groupElements.map(renderGroupOutline)}
         </g>
       </g>

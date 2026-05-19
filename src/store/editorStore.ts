@@ -54,6 +54,7 @@ export type EditorState = {
   setSelectedFill: (filled: boolean) => void
   setSelectedStrokeWidth: (width: number) => void
   updateSelectedPolylinePoint: (index: number, point: Coordinate) => void
+  updateSelectedPointFromWorld: (index: number, point: Coordinate) => void
   setDrawTool: (tool: DrawTool) => void
   addDraftPoint: (point: Coordinate) => void
   finishPolylineDraw: () => void
@@ -685,6 +686,44 @@ export const useEditorStore = create<EditorState>((set) => ({
       }
 
       points[index] = { ...point }
+
+      return {
+        project: withTouchedProject({
+          ...state.project,
+          elements: {
+            ...state.project.elements,
+            [selectedId]: {
+              ...current,
+              geom: {
+                ...current.geom,
+                points,
+              },
+            },
+          },
+        }),
+      }
+    }),
+  updateSelectedPointFromWorld: (index, point) =>
+    set((state) => {
+      const selectedId = state.selectedElementId
+      if (!selectedId) {
+        return state
+      }
+
+      const current = state.project.elements[selectedId]
+      if (!current || (current.type !== 'polyline' && current.type !== 'polygon')) {
+        return state
+      }
+
+      const points = [...(current.geom.points ?? [])]
+      if (index < 0 || index >= points.length) {
+        return state
+      }
+
+      points[index] = {
+        x: point.x - current.geom.x,
+        y: point.y - current.geom.y,
+      }
 
       return {
         project: withTouchedProject({

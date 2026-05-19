@@ -208,4 +208,18 @@ describe('editor store project model', () => {
     const updated = useEditorStore.getState().project.elements['shape-1']
     expect(updated.geom.points?.[1]).toEqual({ x: 3, y: 5 })
   })
+
+  it('updates selected polyline points from world-space coordinates', () => {
+    const state = useEditorStore.getState()
+
+    state.setDrawTool('polyline')
+    state.addDraftPoint({ x: 10, y: 10 })
+    state.addDraftPoint({ x: 12, y: 12 })
+    state.finishPolylineDraw()
+
+    state.updateSelectedPointFromWorld(1, { x: 20, y: 22 })
+
+    const updated = useEditorStore.getState().project.elements['shape-1']
+    expect(updated.geom.points?.[1]).toEqual({ x: 10, y: 12 })
+  })
 })

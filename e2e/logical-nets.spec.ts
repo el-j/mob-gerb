@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('creates an airwire between two pads in logical mode', async ({ page }) => {
+test('@headed creates an airwire between two pads in logical mode', async ({ page }) => {
   await page.goto('/')
 
   // Step 1: Create two pads in Part Creator Mode

@@ -29,7 +29,7 @@ test('zooms and resets the workspace without introducing horizontal overflow', a
   expect(overflow.bodyScrollHeight).toBeGreaterThan(0)
 })
 
-test('creates a freeform copper surface without connector metadata', async ({ page }) => {
+test('@headed creates a freeform copper surface without connector metadata', async ({ page }) => {
   await page.goto('/')
 
   await page.getByRole('button', { name: 'PART CREATOR' }).click()

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('combines shapes into a composite footprint and adjusts its outline', async ({ page }) => {
+test('@headed combines shapes into a composite footprint and adjusts its outline', async ({ page }) => {
   await page.goto('/')
 
   await page.getByRole('button', { name: 'PART CREATOR' }).click()

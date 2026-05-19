@@ -32,7 +32,7 @@ async function expectShellVisible(page: import('@playwright/test').Page) {
 
 // ─── mobile breakpoint ────────────────────────────────────────────────────────
 
-test.describe('mobile breakpoint (390 × 844)', () => {
+test.describe('@headed mobile breakpoint (390 × 844)', () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
   test('all editor shell controls are visible', async ({ page }) => {

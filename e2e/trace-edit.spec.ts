@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('double-tap a routed trace to enter edit mode and run DRC', async ({ page }) => {
+test('@headed double-tap a routed trace to enter edit mode and run DRC', async ({ page }) => {
   await page.goto('/')
 
   // --- Setup: create two pads, connect, and autoroute ---

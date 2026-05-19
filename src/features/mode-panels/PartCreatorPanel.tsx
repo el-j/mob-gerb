@@ -1,3 +1,4 @@
+import { CircleDot, Square, Minus, Hexagon, PenTool, Check, X, Link, Unlink, Eraser, Tag, Ban, Layers, XCircle } from 'lucide-react'
 import { usePartCreatorState } from './usePartCreatorState'
 
 export const PartCreatorPanel = () => {
@@ -26,72 +27,77 @@ export const PartCreatorPanel = () => {
 
   return (
     <section className="creator-panel ui-panel" aria-label="Part creator controls">
-      <div className="shape-row">
-        <button type="button" onClick={() => addShape('circle')}>
-          Add Pad (Circle)
+      <div className="shape-row flex-wrap">
+        <button type="button" onClick={() => addShape('circle')} className="flex items-center gap-1" title="Add Pad (Circle)" aria-label="Add Pad (Circle)">
+          <CircleDot size={16} /> Pad
         </button>
-        <button type="button" onClick={() => addShape('rect')}>
-          Add Rectangle
+        <button type="button" onClick={() => addShape('rect')} className="flex items-center gap-1" title="Add Rectangle" aria-label="Add Rectangle">
+          <Square size={16} /> Rect
         </button>
-        <button type="button" onClick={() => addShape('line')}>
-          Add Line
+        <button type="button" onClick={() => addShape('line')} className="flex items-center gap-1" title="Add Line" aria-label="Add Line">
+          <Minus size={16} /> Line
         </button>
-        <button type="button" onClick={() => addShape('polygon')}>
-          Add Copper Surface
+        <button type="button" onClick={() => addShape('polygon')} className="flex items-center gap-1" title="Add Copper Surface" aria-label="Add Copper Surface">
+          <Hexagon size={16} /> Copper
         </button>
         <button
           type="button"
-          className={drawTool === 'polyline' ? 'active-action' : ''}
+          className={`flex items-center gap-1 ${drawTool === 'polyline' ? 'active-action' : ''}`}
           onClick={() => setDrawTool(drawTool === 'polyline' ? 'none' : 'polyline')}
+          title={drawTool === 'polyline' ? 'Exit Draw Tool' : 'Start Free Draw'}
+          aria-label={drawTool === 'polyline' ? 'Exit Draw Tool' : 'Start Free Draw'}
         >
-          {drawTool === 'polyline' ? 'Exit Draw Tool' : 'Start Free Draw'}
+          {drawTool === 'polyline' ? <><X size={16} /> Exit Draw</> : <><PenTool size={16} /> Draw</>}
         </button>
-        <button type="button" onClick={finishPolylineDraw} disabled={drawTool !== 'polyline' || draftPoints.length < 2}>
-          Finish Polyline
+        <button type="button" onClick={finishPolylineDraw} disabled={drawTool !== 'polyline' || draftPoints.length < 2} className="flex items-center gap-1" aria-label="Finish Polyline">
+          <Check size={16} /> Finish
         </button>
-        <button type="button" onClick={clearDraftPoints} disabled={drawTool !== 'polyline' && draftPoints.length === 0}>
-          Cancel Draw
+        <button type="button" onClick={clearDraftPoints} disabled={drawTool !== 'polyline' && draftPoints.length === 0} className="flex items-center gap-1" aria-label="Cancel Draw">
+          <Eraser size={16} /> Cancel
         </button>
       </div>
 
-      <div className="shape-row">
-        <button type="button" onClick={combineSelectedElements} disabled={selectedElementIds.length < 2}>
-          Combine Selected
+      <div className="shape-row flex-wrap">
+        <button type="button" onClick={combineSelectedElements} disabled={selectedElementIds.length < 2} className="flex items-center gap-1" title="Combine Selected" aria-label="Combine Selected">
+          <Link size={16} /> Combine
         </button>
         <button
           type="button"
           onClick={() => selectedElement && selectedElement.type === 'group' && splitComposite(selectedElement.id)}
           disabled={!selectedElement || selectedElement.type !== 'group'}
+          className="flex items-center gap-1"
+          title="Split Composite"
+          aria-label="Split Composite"
         >
-          Split Composite
+          <Unlink size={16} /> Split
         </button>
-        <button type="button" onClick={() => selectElement(null)} disabled={selectedElementIds.length === 0}>
-          Clear Selection
+        <button type="button" onClick={() => selectElement(null)} disabled={selectedElementIds.length === 0} className="flex items-center gap-1" title="Clear Selection" aria-label="Clear Selection">
+          <XCircle size={16} /> Deselect
         </button>
       </div>
 
-      <div className="tag-row">
-        <span>
+      <div className="tag-row flex-wrap items-center">
+        <span className="mr-2 text-sm">
           Selected: {selectedElementIds.length === 0 ? 'none' : selectedElementIds.length > 1 ? `${selectedElementIds.length} shapes` : selectedElementId ?? 'none'}
         </span>
-        <label>
+        <label className="flex items-center gap-1">
           Pin
-          <input className="ui-input" type="number" min="1" step="1" value={pinInput} onChange={(event) => setPinInput(event.target.value)} />
+          <input className="ui-input w-16" type="number" min="1" step="1" value={pinInput} onChange={(event) => setPinInput(event.target.value)} />
         </label>
-        <button type="button" onClick={() => applyTagToSelected('through-hole', requestedPin)}>
-          Tag Through-Hole Pad
+        <button type="button" onClick={() => applyTagToSelected('through-hole', requestedPin)} className="flex items-center gap-1" title="Tag Through-Hole Pad" aria-label="Tag Through-Hole Pad">
+          <Tag size={16} /> TH
         </button>
-        <button type="button" onClick={() => applyTagToSelected('smd', requestedPin)}>
-          Tag SMD Pad
+        <button type="button" onClick={() => applyTagToSelected('smd', requestedPin)} className="flex items-center gap-1" title="Tag SMD Pad" aria-label="Tag SMD Pad">
+          <Tag size={16} /> SMD
         </button>
-        <button type="button" onClick={() => applyTagToSelected('silkscreen')}>
-          Tag Silkscreen
+        <button type="button" onClick={() => applyTagToSelected('silkscreen')} className="flex items-center gap-1" title="Tag Silkscreen" aria-label="Tag Silkscreen">
+          <Layers size={16} /> Silk
         </button>
-        <button type="button" onClick={() => applyTagToSelected('copper-surface')}>
-          Tag Copper Surface
+        <button type="button" onClick={() => applyTagToSelected('copper-surface')} className="flex items-center gap-1" title="Tag Copper Surface" aria-label="Tag Copper Surface">
+          <Hexagon size={16} /> Copper
         </button>
-        <button type="button" onClick={() => applyTagToSelected('unassigned')}>
-          Clear Tag
+        <button type="button" onClick={() => applyTagToSelected('unassigned')} className="flex items-center gap-1" title="Clear Tag" aria-label="Clear Tag">
+          <Ban size={16} /> Clear
         </button>
       </div>
 

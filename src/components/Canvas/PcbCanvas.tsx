@@ -610,48 +610,76 @@ export const PcbCanvas = () => {
       const pointString = points.map((point) => `${element.geom.x + point.x},${element.geom.y + point.y}`).join(' ')
 
       return (
-        <polyline
+        <g
           key={element.id}
-          id={element.connector?.svgId ?? element.id}
           data-testid={`element-${element.id}`}
           data-selected={selected ? 'true' : 'false'}
           data-role={element.role}
           data-layer={element.pcbLayer}
           data-connector-id={element.connector?.connectorId ?? ''}
-          points={pointString}
-          fill="none"
-          stroke={selected ? '#40a9ff' : elementStroke(element)}
-          strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 1)}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
           onPointerDown={(event) => handleElementPointerDown(event, element.id)}
           onDoubleClick={(event) => handleElementDoubleClick(event, element.id)}
-        />
+        >
+          {/* Fat transparent stroke for easier hit testing */}
+          <polyline
+            points={pointString}
+            fill="none"
+            stroke="transparent"
+            strokeWidth={15}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
+          />
+          <polyline
+            id={element.connector?.svgId ?? element.id}
+            points={pointString}
+            fill="none"
+            stroke={selected ? '#40a9ff' : elementStroke(element)}
+            strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 1)}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </g>
       )
     }
 
     return (
-      <line
+      <g
         key={element.id}
-        id={element.connector?.svgId ?? element.id}
         data-testid={`element-${element.id}`}
         data-selected={selected ? 'true' : 'false'}
         data-role={element.role}
         data-layer={element.pcbLayer}
         data-connector-id={element.connector?.connectorId ?? ''}
-        x1={element.geom.x}
-        y1={element.geom.y}
-        x2={element.geom.x + (element.geom.w ?? 0)}
-        y2={element.geom.y + (element.geom.h ?? 0)}
-        fill="none"
-        stroke={selected ? '#40a9ff' : elementStroke(element)}
-        strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 1)}
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
         onPointerDown={(event) => handleElementPointerDown(event, element.id)}
         onDoubleClick={(event) => handleElementDoubleClick(event, element.id)}
-      />
+      >
+        {/* Fat transparent stroke for easier hit testing */}
+        <line
+          x1={element.geom.x}
+          y1={element.geom.y}
+          x2={element.geom.x + (element.geom.w ?? 0)}
+          y2={element.geom.y + (element.geom.h ?? 0)}
+          fill="none"
+          stroke="transparent"
+          strokeWidth={15}
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+        <line
+          id={element.connector?.svgId ?? element.id}
+          x1={element.geom.x}
+          y1={element.geom.y}
+          x2={element.geom.x + (element.geom.w ?? 0)}
+          y2={element.geom.y + (element.geom.h ?? 0)}
+          fill="none"
+          stroke={selected ? '#40a9ff' : elementStroke(element)}
+          strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 1)}
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </g>
     )
   }
 

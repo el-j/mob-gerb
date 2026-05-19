@@ -1,9 +1,7 @@
-import { useEditorStore } from '../../store/editorStore'
+import { useLogicalPanelState } from './useLogicalPanelState'
 
 export const LogicalModePanel = () => {
-  const isRouting = useEditorStore((state) => state.isRouting)
-  const triggerAutoroute = useEditorStore((state) => state.triggerAutoroute)
-  const nets = useEditorStore((state) => state.project.nets)
+  const { isRouting, nets, triggerAutoroute } = useLogicalPanelState()
 
   return (
     <section className="creator-panel ui-panel" aria-label="Logical mode controls">

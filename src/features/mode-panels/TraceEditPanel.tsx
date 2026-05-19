@@ -1,11 +1,7 @@
-import { useEditorStore } from '../../store/editorStore'
+import { useTraceEditState } from './useTraceEditState'
 
 export const TraceEditPanel = () => {
-  const drcViolations = useEditorStore((state) => state.drcViolations)
-  const drcClearanceMm = useEditorStore((state) => state.drcClearanceMm)
-  const exitTraceEdit = useEditorStore((state) => state.exitTraceEdit)
-  const runDrcAction = useEditorStore((state) => state.runDrc)
-  const setDrcClearance = useEditorStore((state) => state.setDrcClearance)
+  const { drcViolations, drcClearanceMm, exitTraceEdit, runDrc: runDrcAction, setDrcClearance } = useTraceEditState()
 
   return (
     <section className="creator-panel ui-panel" aria-label="Trace edit controls">

@@ -1,11 +1,7 @@
-import { useEditorStore } from '../../store/editorStore'
+import { useWorkspaceControls } from './useWorkspaceControls'
 
 export const ZoomGridControls = () => {
-  const gridSize = useEditorStore((state) => state.gridSize)
-  const zoom = useEditorStore((state) => state.zoom)
-  const setGridSize = useEditorStore((state) => state.setGridSize)
-  const zoomBy = useEditorStore((state) => state.zoomBy)
-  const resetView = useEditorStore((state) => state.resetView)
+  const { gridSize, zoom, setGridSize, zoomBy, resetView } = useWorkspaceControls()
 
   return (
     <div className="floating-zoom ui-floating" aria-label="Zoom controls">

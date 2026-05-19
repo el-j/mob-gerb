@@ -1,8 +1,10 @@
 # REFACTOR-003: Selector Hooks and Mode Panel Modules
 
-- Status: planned
+- Status: completed
 - Plan-Version: 1
 - Depends on: REFACTOR-001
+- Completed: 2026-05-19
+- Validation: lint ✓ · build 427KB ✓ · 40/40 unit ✓ · 1/1 smoke ✓ · 9/9 feature e2e ✓
 
 ## Motivation
 

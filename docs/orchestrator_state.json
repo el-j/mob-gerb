@@ -2,22 +2,6 @@
   "baseBranch": "main",
   "openTasks": [
     {
-      "id": "REFACTOR-003",
-      "title": "Selector Hooks and Mode Panel Modules",
-      "path": "docs/backlog/refactor/REFACTOR-003_selector-hooks-and-mode-panel-modules.md",
-      "type": "refactor",
-      "status": "ready",
-      "dependencies": ["REFACTOR-001"]
-    },
-    {
-      "id": "TEST-003",
-      "title": "Style and Interaction Regression Guards",
-      "path": "docs/backlog/tests/TEST-003_style-and-interaction-regression-guards.md",
-      "type": "test",
-      "status": "ready",
-      "dependencies": ["REFACTOR-002"]
-    },
-    {
       "id": "FEAT-007",
       "title": "Trace Edit Mode and DRC",
       "path": "docs/backlog/features/FEAT-007_trace-edit-mode-and-drc.md",
@@ -52,6 +36,18 @@
   ],
   "blockedTasks": [],
   "completedTasks": [
+    {
+      "id": "TEST-003",
+      "title": "Style and Interaction Regression Guards",
+      "path": "docs/backlog/tests/TEST-003_style-and-interaction-regression-guards.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "REFACTOR-003",
+      "title": "Selector Hooks and Mode Panel Modules",
+      "path": "docs/backlog/refactor/REFACTOR-003_selector-hooks-and-mode-panel-modules.md",
+      "completedAt": "2026-05-19"
+    },
     {
       "id": "REFACTOR-002",
       "title": "Tailwind v4 Design Tokens and UI Primitives",

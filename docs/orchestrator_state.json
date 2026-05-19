@@ -1,0 +1,134 @@
+{
+  "baseBranch": "main",
+  "openTasks": [],
+  "blockedTasks": [],
+  "completedTasks": [
+    {
+      "id": "TEST-002",
+      "title": "Full Playwright and GitHub Actions",
+      "path": "docs/backlog/tests/TEST-002_full-playwright-and-github-actions.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-009",
+      "title": "Gerber and Excellon Export",
+      "path": "docs/backlog/features/FEAT-009_gerber-and-excellon-export.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-008",
+      "title": "Persistence and Draft I/O",
+      "path": "docs/backlog/features/FEAT-008_persistence-and-draft-io.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-007",
+      "title": "Trace Edit Mode and DRC",
+      "path": "docs/backlog/features/FEAT-007_trace-edit-mode-and-drc.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "TEST-003",
+      "title": "Style and Interaction Regression Guards",
+      "path": "docs/backlog/tests/TEST-003_style-and-interaction-regression-guards.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "REFACTOR-003",
+      "title": "Selector Hooks and Mode Panel Modules",
+      "path": "docs/backlog/refactor/REFACTOR-003_selector-hooks-and-mode-panel-modules.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "REFACTOR-002",
+      "title": "Tailwind v4 Design Tokens and UI Primitives",
+      "path": "docs/backlog/refactor/REFACTOR-002_tailwind-v4-design-tokens-and-ui-primitives.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "REFACTOR-001",
+      "title": "App Shell Decomposition and Router Foundation",
+      "path": "docs/backlog/refactor/REFACTOR-001_app-shell-decomposition-and-router-foundation.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "TEST-001",
+      "title": "Test Foundation and CI Prep",
+      "path": "docs/backlog/tests/TEST-001_test-foundation-and-ci-prep.md",
+      "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-001",
+      "title": "Project State and History Model",
+      "path": "docs/backlog/features/FEAT-001_project-state-and-history-model.md",
+      "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-002",
+      "title": "State-Driven Canvas and Selection",
+      "path": "docs/backlog/features/FEAT-002_state-driven-canvas-and-selection.md",
+      "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-003",
+      "title": "Footprint Drawing and Tagging",
+      "path": "docs/backlog/features/FEAT-003_footprint-drawing-and-tagging.md",
+      "completedAt": "2026-05-18"
+    },
+    {
+      "id": "FEAT-010",
+      "title": "Part Creator Composites, Selection, and Outline Editing",
+      "path": "docs/backlog/features/FEAT-010_part-creator-composites-selection-and-outline-editing.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-011",
+      "title": "SVG Editor Engine Decision and Adoption Strategy",
+      "path": "docs/backlog/features/FEAT-011_svg-editor-engine-decision-and-adoption-strategy.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-012",
+      "title": "Part Creator Mobile UX and Drawing Controls",
+      "path": "docs/backlog/features/FEAT-012_part-creator-mobile-ux-and-drawing-controls.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-013",
+      "title": "On-Canvas Point Handle Editing",
+      "path": "docs/backlog/features/FEAT-013_on-canvas-point-handle-editing.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-014",
+      "title": "Polygon Add/Remove Points On-Canvas",
+      "path": "docs/backlog/features/FEAT-014_polygon-add-remove-points-on-canvas.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-004",
+      "title": "Fritzing Import and Part Export",
+      "path": "docs/backlog/features/FEAT-004_fritzing-import-and-part-export.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-015",
+      "title": "Copy, Paste, and Delete",
+      "path": "docs/backlog/features/FEAT-015_copy-paste-delete.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-005",
+      "title": "Logical Nets and Airwires",
+      "path": "docs/backlog/features/FEAT-005_logical-nets-and-airwires.md",
+      "completedAt": "2026-05-19"
+    },
+    {
+      "id": "FEAT-006",
+      "title": "Autorouter Worker MVP",
+      "path": "docs/backlog/features/FEAT-006_autorouter-worker-mvp.md",
+      "completedAt": "2026-05-19"
+    }
+  ],
+  "updatedAt": "2026-05-19"
+}

@@ -1,0 +1,22 @@
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    coverage: {
+      enabled: false,
+      reporter: ['text', 'html'],
+    },
+  },
+  base: process.env.NODE_ENV === 'github-pages' ? '/mob-gerb/' : '/',
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+  },
+})

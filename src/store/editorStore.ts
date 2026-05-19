@@ -46,6 +46,11 @@ export type EditorState = {
   draftPoints: Coordinate[]
   historyPast: HistorySnapshot[]
   historyFuture: HistorySnapshot[]
+  hoveredElementId: string | null
+  hiddenElementIds: string[]
+  setHoveredElementId: (id: string | null) => void
+  toggleElementVisibility: (id: string) => void
+  deleteElement: (id: string) => void
   setMode: (mode: AppMode) => void
   panBy: (delta: Coordinate) => void
   setZoom: (zoom: number) => void
@@ -345,6 +350,69 @@ export const useEditorStore = create<EditorState>((set) => ({
   draftPoints: [],
   historyPast: [],
   historyFuture: [],
+  hoveredElementId: null,
+  hiddenElementIds: [],
+  setHoveredElementId: (id) => set({ hoveredElementId: id }),
+  toggleElementVisibility: (id) =>
+    set((state) => ({
+      hiddenElementIds: state.hiddenElementIds.includes(id)
+        ? state.hiddenElementIds.filter((hiddenId) => hiddenId !== id)
+        : [...state.hiddenElementIds, id],
+    })),
+  deleteElement: (elementId) =>
+    set((state) => {
+      const remainingElements = { ...state.project.elements }
+      const element = remainingElements[elementId]
+      if (!element) return state
+
+      const snapshot = createSnapshot(state)
+
+      delete remainingElements[elementId]
+
+      if (element.type === 'group') {
+        for (const childId of element.children ?? []) {
+          delete remainingElements[childId]
+        }
+      } else if (element.groupId) {
+        const parent = remainingElements[element.groupId]
+        if (parent?.type === 'group') {
+          const nextChildren = (parent.children ?? []).filter((childId) => childId !== elementId)
+          if (nextChildren.length === 0) {
+            delete remainingElements[parent.id]
+          } else {
+            remainingElements[parent.id] = recomputeGroupGeometry({
+              ...parent,
+              children: nextChildren,
+            }, remainingElements)
+          }
+        }
+      }
+
+      const remainingNets = { ...state.project.nets }
+      for (const [netId, net] of Object.entries(remainingNets)) {
+        const nextPads = net.padIds.filter((id) => id !== elementId)
+        if (nextPads.length !== net.padIds.length) {
+          if (nextPads.length < 2) {
+            delete remainingNets[netId]
+          } else {
+            remainingNets[netId] = { ...net, padIds: nextPads }
+          }
+        }
+      }
+
+      const nextSelectedIds = state.selectedElementIds.filter((id) => id !== elementId)
+
+      return {
+        project: withTouchedProject({
+          ...state.project,
+          elements: remainingElements,
+          nets: remainingNets,
+        }),
+        historyPast: [...state.historyPast.slice(-MAX_HISTORY_SIZE + 1), snapshot],
+        historyFuture: [],
+        ...setSelectionState(nextSelectedIds),
+      }
+    }),
   setMode: (mode) => set({ mode }),
   panBy: (delta) =>
     set((state) => ({

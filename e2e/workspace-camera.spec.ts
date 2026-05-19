@@ -8,7 +8,7 @@ test('zooms and resets the workspace without introducing horizontal overflow', a
   await expect(page.getByText('110%')).toBeVisible()
   await page.getByRole('button', { name: '+' }).click()
   await expect(page.getByText('120%')).toBeVisible()
-  await page.getByRole('button', { name: '-' }).click()
+  await page.getByRole('button', { name: '-', exact: true }).click()
   await expect(page.getByText('110%')).toBeVisible()
   await page.getByRole('button', { name: '1:1' }).click()
   await expect(page.getByText('100%')).toBeVisible()

@@ -1,4 +1,4 @@
-import { type PointerEvent, type WheelEvent, type MouseEvent, useEffect, useRef } from 'react'
+import { type PointerEvent, type WheelEvent, type MouseEvent, useEffect, useRef, useState } from 'react'
 
 import { boundsFromElement } from '../../core/math/geometry'
 import { snapCoordinate } from '../../core/math/coordinates'
@@ -84,11 +84,28 @@ export const PcbCanvas = () => {
   const enterTraceEdit = useEditorStore((state) => state.enterTraceEdit)
   const exitTraceEdit = useEditorStore((state) => state.exitTraceEdit)
   const updateTraceVertex = useEditorStore((state) => state.updateTraceVertex)
+  const hoveredElementId = useEditorStore((state) => state.hoveredElementId)
+  const hiddenElementIds = useEditorStore((state) => state.hiddenElementIds)
+
+  const [isSpacePressed, setIsSpacePressed] = useState(false)
+  const spacePressedRef = useRef(false)
+
+  const activePointers = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const initialTouchDistance = useRef(0)
+  const initialTouchZoom = useRef(1)
+  const initialTouchCenter = useRef({ x: 0, y: 0 })
+  const initialTouchPan = useRef({ x: 0, y: 0 })
 
   const pointerRef = useRef<ActivePointer | null>(null)
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code === 'Space') {
+        event.preventDefault()
+        setIsSpacePressed(true)
+        spacePressedRef.current = true
+      }
+
       if (event.key === 'Escape' && mode === 'LOGICAL_MODE') {
         cancelLogicalConnection()
       }
@@ -111,8 +128,19 @@ export const PcbCanvas = () => {
       }
     }
 
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.code === 'Space') {
+        setIsSpacePressed(false)
+        spacePressedRef.current = false
+      }
+    }
+
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
   }, [mode, copySelected, pasteCopied, deleteSelected, cancelLogicalConnection, exitTraceEdit])
 
   const clientToWorld = (clientX: number, clientY: number, svgElement: SVGSVGElement): Coordinate => {
@@ -217,6 +245,46 @@ export const PcbCanvas = () => {
   const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
     if (isRouting) return // Lock canvas during autorouting
 
+    activePointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+
+    // Check for multi-pointer mobile touch gestures
+    if (activePointers.current.size === 2) {
+      const pts = Array.from(activePointers.current.values())
+      const dx = pts[0].x - pts[1].x
+      const dy = pts[0].y - pts[1].y
+      initialTouchDistance.current = Math.sqrt(dx * dx + dy * dy)
+      initialTouchZoom.current = zoom
+      initialTouchCenter.current = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      initialTouchPan.current = { ...pan }
+
+      if (pointerRef.current) {
+        if (typeof event.currentTarget.releasePointerCapture === 'function' && event.currentTarget.hasPointerCapture(pointerRef.current.id)) {
+          event.currentTarget.releasePointerCapture(pointerRef.current.id)
+        }
+        pointerRef.current = null
+      }
+      return
+    }
+
+    const isPanning =
+      spacePressedRef.current ||
+      event.button === 1 ||
+      event.button === 2 ||
+      (mode === 'VIEW_MODE' && !event.defaultPrevented)
+
+    if (isPanning) {
+      if (typeof event.currentTarget.setPointerCapture === 'function') {
+        event.currentTarget.setPointerCapture(event.pointerId)
+      }
+      pointerRef.current = {
+        kind: 'pan',
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+      }
+      return
+    }
+
     if (mode !== 'VIEW_MODE') {
       if (mode === 'PART_CREATOR_MODE') {
         if (drawTool === 'polyline') {
@@ -225,26 +293,51 @@ export const PcbCanvas = () => {
           return
         }
 
-        selectElement(null)
+        if (event.target === event.currentTarget) {
+          selectElement(null)
+        }
       }
       return
-    }
-
-    if (typeof event.currentTarget.setPointerCapture === 'function') {
-      event.currentTarget.setPointerCapture(event.pointerId)
-    }
-    pointerRef.current = {
-      kind: 'pan',
-      id: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
     }
   }
 
   const handlePointerMove = (event: PointerEvent<SVGSVGElement>) => {
+    if (activePointers.current.has(event.pointerId)) {
+      activePointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    }
+
     if (mode === 'LOGICAL_MODE' && pendingNetConnection) {
       const worldPoint = clientToWorld(event.clientX, event.clientY, event.currentTarget)
       setLogicalDraftPointer(snapCoordinate(worldPoint, gridSize))
+    }
+
+    // Handle 2-finger mobile gesture
+    if (activePointers.current.size === 2) {
+      const pts = Array.from(activePointers.current.values())
+      const dx = pts[0].x - pts[1].x
+      const dy = pts[0].y - pts[1].y
+      const currentDist = Math.sqrt(dx * dx + dy * dy)
+      const currentCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+
+      if (initialTouchDistance.current > 0) {
+        const scale = currentDist / initialTouchDistance.current
+        const newZoom = initialTouchZoom.current * scale
+        setZoom(newZoom)
+
+        const dCenterX = currentCenter.x - initialTouchCenter.current.x
+        const dCenterY = currentCenter.y - initialTouchCenter.current.y
+
+        panBy({
+          x: dCenterX / zoom,
+          y: dCenterY / zoom,
+        })
+
+        // Anchors tracking update
+        initialTouchDistance.current = currentDist
+        initialTouchCenter.current = currentCenter
+        initialTouchZoom.current = newZoom
+      }
+      return
     }
 
     const activePointer = pointerRef.current
@@ -253,10 +346,6 @@ export const PcbCanvas = () => {
     }
 
     if (activePointer.kind === 'pan') {
-      if (mode !== 'VIEW_MODE') {
-        return
-      }
-
       const delta = snapCoordinate(
         {
           x: (event.clientX - activePointer.x) / zoom,
@@ -381,6 +470,12 @@ export const PcbCanvas = () => {
   }
 
   const handlePointerUp = (event: PointerEvent<SVGSVGElement>) => {
+    activePointers.current.delete(event.pointerId)
+
+    if (activePointers.current.size < 2) {
+      initialTouchDistance.current = 0
+    }
+
     if (pointerRef.current?.id !== event.pointerId) {
       return
     }
@@ -528,6 +623,7 @@ export const PcbCanvas = () => {
 
   const renderElement = (element: ElementState) => {
     const selected = selectedElementIds.includes(element.id)
+    const hovered = element.id === hoveredElementId || (element.groupId && element.groupId === hoveredElementId)
 
     if (element.type === 'group') {
       return null
@@ -535,24 +631,38 @@ export const PcbCanvas = () => {
 
     if (element.type === 'circle') {
       return (
-        <circle
-          key={element.id}
-          id={element.connector?.svgId ?? element.id}
-          data-testid={`element-${element.id}`}
-          data-selected={selected ? 'true' : 'false'}
-          data-role={element.role}
-          data-layer={element.pcbLayer}
-          data-connector-id={element.connector?.connectorId ?? ''}
-          cx={element.geom.x}
-          cy={element.geom.y}
-          r={element.geom.r ?? 1}
-          fill={element.geom.filled ? 'rgba(247, 189, 19, 0.24)' : 'transparent'}
-          stroke={selected ? '#40a9ff' : elementStroke(element)}
-          strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 0.55)}
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-          onPointerDown={(event) => handleElementPointerDown(event, element.id)}
-        />
+        <g key={element.id}>
+          {hovered && (
+            <circle
+              cx={element.geom.x}
+              cy={element.geom.y}
+              r={(element.geom.r ?? 1) + 0.4}
+              fill="none"
+              stroke="#40a9ff"
+              strokeWidth={1.5}
+              strokeOpacity={0.6}
+              pointerEvents="none"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+          <circle
+            id={element.connector?.svgId ?? element.id}
+            data-testid={`element-${element.id}`}
+            data-selected={selected ? 'true' : 'false'}
+            data-role={element.role}
+            data-layer={element.pcbLayer}
+            data-connector-id={element.connector?.connectorId ?? ''}
+            cx={element.geom.x}
+            cy={element.geom.y}
+            r={element.geom.r ?? 1}
+            fill={element.geom.filled ? 'rgba(247, 189, 19, 0.24)' : 'transparent'}
+            stroke={selected ? '#40a9ff' : elementStroke(element)}
+            strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 0.55)}
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+            onPointerDown={(event) => handleElementPointerDown(event, element.id)}
+          />
+        </g>
       )
     }
 
@@ -560,25 +670,40 @@ export const PcbCanvas = () => {
       const isOutline = element.role === 'silkscreen' || element.role === 'group'
 
       return (
-        <rect
-          key={element.id}
-          id={element.connector?.svgId ?? element.id}
-          data-testid={`element-${element.id}`}
-          data-selected={selected ? 'true' : 'false'}
-          data-role={element.role}
-          data-layer={element.pcbLayer}
-          data-connector-id={element.connector?.connectorId ?? ''}
-          x={element.geom.x}
-          y={element.geom.y}
-          width={element.geom.w ?? 1}
-          height={element.geom.h ?? 1}
-          fill={isOutline ? 'none' : element.geom.filled ? 'rgba(247, 189, 19, 0.2)' : 'transparent'}
-          stroke={selected ? '#40a9ff' : elementStroke(element)}
-          strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 1)}
-          vectorEffect="non-scaling-stroke"
-          pointerEvents={isOutline ? 'stroke' : 'visiblePainted'}
-          onPointerDown={(event) => handleElementPointerDown(event, element.id)}
-        />
+        <g key={element.id}>
+          {hovered && (
+            <rect
+              x={element.geom.x - 0.4}
+              y={element.geom.y - 0.4}
+              width={(element.geom.w ?? 1) + 0.8}
+              height={(element.geom.h ?? 1) + 0.8}
+              fill="none"
+              stroke="#40a9ff"
+              strokeWidth={1.5}
+              strokeOpacity={0.6}
+              pointerEvents="none"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+          <rect
+            id={element.connector?.svgId ?? element.id}
+            data-testid={`element-${element.id}`}
+            data-selected={selected ? 'true' : 'false'}
+            data-role={element.role}
+            data-layer={element.pcbLayer}
+            data-connector-id={element.connector?.connectorId ?? ''}
+            x={element.geom.x}
+            y={element.geom.y}
+            width={element.geom.w ?? 1}
+            height={element.geom.h ?? 1}
+            fill={isOutline ? 'none' : element.geom.filled ? 'rgba(247, 189, 19, 0.2)' : 'transparent'}
+            stroke={selected ? '#40a9ff' : elementStroke(element)}
+            strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.25 : (element.geom.strokeWidth ?? 1)}
+            vectorEffect="non-scaling-stroke"
+            pointerEvents={isOutline ? 'stroke' : 'visiblePainted'}
+            onPointerDown={(event) => handleElementPointerDown(event, element.id)}
+          />
+        </g>
       )
     }
 
@@ -587,21 +712,33 @@ export const PcbCanvas = () => {
       const pointString = points.map((point) => `${element.geom.x + point.x},${element.geom.y + point.y}`).join(' ')
 
       return (
-        <polygon
-          key={element.id}
-          id={element.connector?.svgId ?? element.id}
-          data-testid={`element-${element.id}`}
-          data-selected={selected ? 'true' : 'false'}
-          data-role={element.role}
-          data-layer={element.pcbLayer}
-          data-connector-id={element.connector?.connectorId ?? ''}
-          points={pointString}
-          fill={element.geom.filled ? (selected ? 'rgba(64, 169, 255, 0.2)' : 'rgba(247, 189, 19, 0.22)') : 'transparent'}
-          stroke={selected ? '#40a9ff' : elementStroke(element)}
-          strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.2 : (element.geom.strokeWidth ?? 1)}
-          vectorEffect="non-scaling-stroke"
-          onPointerDown={(event) => handleElementPointerDown(event, element.id)}
-        />
+        <g key={element.id}>
+          {hovered && (
+            <polygon
+              points={pointString}
+              fill="none"
+              stroke="#40a9ff"
+              strokeWidth={(element.geom.strokeWidth ?? 1) + 1.2}
+              strokeOpacity={0.6}
+              pointerEvents="none"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+          <polygon
+            id={element.connector?.svgId ?? element.id}
+            data-testid={`element-${element.id}`}
+            data-selected={selected ? 'true' : 'false'}
+            data-role={element.role}
+            data-layer={element.pcbLayer}
+            data-connector-id={element.connector?.connectorId ?? ''}
+            points={pointString}
+            fill={element.geom.filled ? (selected ? 'rgba(64, 169, 255, 0.2)' : 'rgba(247, 189, 19, 0.22)') : 'transparent'}
+            stroke={selected ? '#40a9ff' : elementStroke(element)}
+            strokeWidth={selected ? (element.geom.strokeWidth ?? 1) + 0.2 : (element.geom.strokeWidth ?? 1)}
+            vectorEffect="non-scaling-stroke"
+            onPointerDown={(event) => handleElementPointerDown(event, element.id)}
+          />
+        </g>
       )
     }
 
@@ -620,6 +757,19 @@ export const PcbCanvas = () => {
           onPointerDown={(event) => handleElementPointerDown(event, element.id)}
           onDoubleClick={(event) => handleElementDoubleClick(event, element.id)}
         >
+          {hovered && (
+            <polyline
+              points={pointString}
+              fill="none"
+              stroke="#40a9ff"
+              strokeWidth={(element.geom.strokeWidth ?? 1) + 1.5}
+              strokeOpacity={0.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              pointerEvents="none"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
           {/* Fat transparent stroke for easier hit testing */}
           <polyline
             points={pointString}
@@ -655,6 +805,21 @@ export const PcbCanvas = () => {
         onPointerDown={(event) => handleElementPointerDown(event, element.id)}
         onDoubleClick={(event) => handleElementDoubleClick(event, element.id)}
       >
+        {hovered && (
+          <line
+            x1={element.geom.x}
+            y1={element.geom.y}
+            x2={element.geom.x + (element.geom.w ?? 0)}
+            y2={element.geom.y + (element.geom.h ?? 0)}
+            fill="none"
+            stroke="#40a9ff"
+            strokeWidth={(element.geom.strokeWidth ?? 1) + 1.5}
+            strokeOpacity={0.5}
+            strokeLinecap="round"
+            pointerEvents="none"
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
         {/* Fat transparent stroke for easier hit testing */}
         <line
           x1={element.geom.x}
@@ -810,14 +975,24 @@ export const PcbCanvas = () => {
     )
   }
 
-  const copper0Elements = Object.values(elements).filter((element) => element.pcbLayer === 'copper0')
-  const copper1Elements = Object.values(elements).filter((element) => element.pcbLayer === 'copper1')
-  const silkscreenElements = Object.values(elements).filter((element) => element.pcbLayer === 'silkscreen')
-  const groupElements = Object.values(elements).filter((element) => element.type === 'group')
+  const visibleElements = Object.values(elements).filter((element) => !hiddenElementIds.includes(element.id))
+
+  const copper0Elements = visibleElements.filter((element) => element.pcbLayer === 'copper0')
+  const copper1Elements = visibleElements.filter((element) => element.pcbLayer === 'copper1')
+  const silkscreenElements = visibleElements.filter((element) => element.pcbLayer === 'silkscreen')
+  const groupElements = visibleElements.filter((element) => element.type === 'group')
 
   const handleWheel = (event: WheelEvent<SVGSVGElement>) => {
-    const delta = event.deltaY < 0 ? 0.1 : -0.1
-    setZoom(zoom + delta)
+    event.preventDefault()
+    if (event.ctrlKey) {
+      const delta = event.deltaY < 0 ? 0.05 : -0.05
+      setZoom(zoom + delta)
+    } else {
+      panBy({
+        x: -event.deltaX / 10 / zoom,
+        y: -event.deltaY / 10 / zoom,
+      })
+    }
   }
 
   const draftPointString = draftPoints.map((point) => `${point.x},${point.y}`).join(' ')
@@ -825,7 +1000,7 @@ export const PcbCanvas = () => {
   return (
     <svg
       viewBox={`0 0 ${GRID_VIEWBOX_SIZE} ${GRID_VIEWBOX_SIZE}`}
-      className="pcb-canvas"
+      className={`pcb-canvas ${isSpacePressed ? 'space-grab' : ''} ${pointerRef.current?.kind === 'pan' ? 'space-grabbing' : ''}`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

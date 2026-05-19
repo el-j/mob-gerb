@@ -338,4 +338,26 @@ describe('editor store project model', () => {
     const postDeleteState = useEditorStore.getState()
     expect(Object.keys(postDeleteState.project.nets).length).toBe(0)
   })
+
+  it('manages hover highlights, visibility toggles, and direct deletion correctly', () => {
+    const state = useEditorStore.getState()
+
+    // Test hover highlight
+    state.setHoveredElementId('connector0pin')
+    expect(useEditorStore.getState().hoveredElementId).toBe('connector0pin')
+    state.setHoveredElementId(null)
+    expect(useEditorStore.getState().hoveredElementId).toBeNull()
+
+    // Test visibility toggle
+    expect(useEditorStore.getState().hiddenElementIds).not.toContain('connector0pin')
+    state.toggleElementVisibility('connector0pin')
+    expect(useEditorStore.getState().hiddenElementIds).toContain('connector0pin')
+    state.toggleElementVisibility('connector0pin')
+    expect(useEditorStore.getState().hiddenElementIds).not.toContain('connector0pin')
+
+    // Test direct element deletion
+    expect(useEditorStore.getState().project.elements['connector0pin']).toBeDefined()
+    state.deleteElement('connector0pin')
+    expect(useEditorStore.getState().project.elements['connector0pin']).toBeUndefined()
+  })
 })

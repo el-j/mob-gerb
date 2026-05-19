@@ -25,7 +25,7 @@ async function expectShellVisible(page: import('@playwright/test').Page) {
   await expect(page.getByRole('button', { name: 'PART CREATOR' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'LOGICAL' })).toBeVisible()
   await expect(page.getByRole('button', { name: '+' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '-' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '-', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: '1:1' })).toBeVisible()
   await expect(page.getByRole('img', { name: 'Mobile-first PCB workspace' })).toBeVisible()
 }

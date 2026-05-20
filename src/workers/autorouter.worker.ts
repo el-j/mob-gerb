@@ -1,7 +1,6 @@
 import type { AutorouterRequest, AutorouterResponse } from './autorouter.protocol'
 import type { ElementState, Coordinate } from '../core/types/pcb'
-
-const generateId = () => Math.random().toString(36).substr(2, 9)
+import { createRouteTraceId, orderNetIdsForStrategy } from './routingPlanning'
 
 const getElementCenter = (el: ElementState): Coordinate => {
   if (el.type === 'circle') return { x: el.geom.x, y: el.geom.y }
@@ -30,7 +29,7 @@ const getBoundingBox = (el: ElementState) => {
 self.onmessage = (e: MessageEvent<AutorouterRequest>) => {
   if (e.data.type !== 'ROUTE_REQUEST') return
 
-  const { nets, elements, gridSize } = e.data
+  const { nets, elements, gridSize, strategy } = e.data
   const traces: ElementState[] = []
   
   const GRID_W = 100
@@ -40,7 +39,11 @@ self.onmessage = (e: MessageEvent<AutorouterRequest>) => {
   // Pre-calculate obstacles
   const elList = Object.values(elements)
 
-  for (const net of Object.values(nets)) {
+  const orderedNetIds = orderNetIdsForStrategy(nets, elements, strategy)
+
+  for (const netId of orderedNetIds) {
+    const net = nets[netId]
+    if (!net) continue
     if (net.padIds.length < 2) continue
     
     // Route each pair sequentially
@@ -145,7 +148,7 @@ self.onmessage = (e: MessageEvent<AutorouterRequest>) => {
         points.push({ x: goal.x - start.x, y: goal.y - start.y }) // exact goal
         
         const polyline: ElementState = {
-          id: `route-${generateId()}`,
+          id: createRouteTraceId(net.id, i),
           type: 'polyline',
           role: 'copper-surface',
           pcbLayer: 'copper1',
@@ -167,7 +170,7 @@ self.onmessage = (e: MessageEvent<AutorouterRequest>) => {
           { x: goal.x - start.x, y: goal.y - start.y }
         ]
         const polyline: ElementState = {
-          id: `route-${generateId()}`,
+          id: createRouteTraceId(net.id, i),
           type: 'polyline',
           role: 'copper-surface',
           pcbLayer: 'copper1',
@@ -183,6 +186,7 @@ self.onmessage = (e: MessageEvent<AutorouterRequest>) => {
   setTimeout(() => {
     self.postMessage({
       type: 'ROUTE_SUCCESS',
+      strategyUsed: strategy,
       traces
     } as AutorouterResponse)
   }, 200)

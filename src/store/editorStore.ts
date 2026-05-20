@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import AutorouterWorker from '../workers/autorouter.worker?worker'
-import type { AutorouterRequest, AutorouterResponse } from '../workers/autorouter.protocol'
+import type { AutorouterRequest, AutorouterResponse, RoutingStrategy } from '../workers/autorouter.protocol'
 
 import { boundsFromElement, boundsToRect, inflateBounds, unionBounds } from '../core/math/geometry'
 import type {
@@ -50,8 +50,10 @@ export type EditorState = {
   hoveredElementId: string | null
   hiddenElementIds: string[]
   activeLayer: PcbLayer
+  routingStrategy: RoutingStrategy
   setLayerCount: (count: number) => void
   setActiveLayer: (layer: PcbLayer) => void
+  setRoutingStrategy: (strategy: RoutingStrategy) => void
   setHoveredElementId: (id: string | null) => void
   toggleElementVisibility: (id: string) => void
   deleteElement: (id: string) => void
@@ -371,6 +373,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   hoveredElementId: null,
   hiddenElementIds: [],
   activeLayer: 'copper1',
+  routingStrategy: 'mvp-grid',
   setLayerCount: (count) =>
     set((state) => {
       const snapshot = createSnapshot(state)
@@ -384,6 +387,7 @@ export const useEditorStore = create<EditorState>((set) => ({
       }
     }),
   setActiveLayer: (layer) => set({ activeLayer: layer }),
+  setRoutingStrategy: (strategy) => set({ routingStrategy: strategy }),
   setHoveredElementId: (id) => set({ hoveredElementId: id }),
   toggleElementVisibility: (id) =>
     set((state) => ({
@@ -1291,6 +1295,8 @@ export const useEditorStore = create<EditorState>((set) => ({
     
     worker.postMessage({
       type: 'ROUTE_REQUEST',
+      strategy: state.routingStrategy,
+      autolayout: state.routingStrategy === 'tscircuit-prototype',
       gridSize: state.gridSize,
       elements: state.project.elements,
       nets: state.project.nets

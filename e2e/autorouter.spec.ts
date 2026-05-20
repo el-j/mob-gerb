@@ -42,6 +42,8 @@ test('triggers autorouter and creates a copper trace polyline', async ({ page })
   await expect(page.locator('line[stroke="#10b981"]')).toHaveCount(1)
 
   // Step 3: Autoroute the net
+  await page.getByRole('combobox', { name: 'Routing strategy' }).selectOption('tscircuit-prototype')
+
   const autorouteBtn = page.getByRole('button', { name: /Autoroute Nets/ })
   await expect(autorouteBtn).toBeEnabled()
   await autorouteBtn.click()
@@ -53,6 +55,6 @@ test('triggers autorouter and creates a copper trace polyline', async ({ page })
     return polylines.length > 0
   }, { timeout: 5000 })
 
-  const routePolyline = page.locator('[data-testid^="element-route-"]')
+  const routePolyline = page.locator('[data-testid^="element-route-net-"]')
   await expect(routePolyline).toBeVisible()
 })

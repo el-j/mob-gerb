@@ -1,7 +1,7 @@
 import { useLogicalPanelState } from './useLogicalPanelState'
 
 export const LogicalModePanel = () => {
-  const { isRouting, nets, triggerAutoroute } = useLogicalPanelState()
+  const { isRouting, nets, routingStrategy, triggerAutoroute, setRoutingStrategy } = useLogicalPanelState()
 
   return (
     <section className="creator-panel ui-panel" aria-label="Logical mode controls">
@@ -18,6 +18,18 @@ export const LogicalModePanel = () => {
         >
           {isRouting ? '⏳ Routing…' : '⚡ Autoroute Nets'}
         </button>
+        <label>
+          Strategy
+          <select
+            className="ui-input"
+            aria-label="Routing strategy"
+            value={routingStrategy}
+            onChange={(event) => setRoutingStrategy(event.target.value as 'mvp-grid' | 'tscircuit-prototype')}
+          >
+            <option value="mvp-grid">MVP Grid</option>
+            <option value="tscircuit-prototype">tscircuit Prototype</option>
+          </select>
+        </label>
       </div>
     </section>
   )

@@ -17,9 +17,9 @@ describe('PcbCanvas state-driven behavior', () => {
     render(<PcbCanvas />)
 
     // THT connectors appear in every copper layer group (correct PCB behavior: the pad drills through all layers)
-    const thtInstances = screen.getAllByTestId('element-copper0.connector0pin')
+    const thtInstances = screen.getAllByTestId('element-connector0pin')
     expect(thtInstances.length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByTestId('element-silkscreen.silk-outline')).toBeInTheDocument()
+    expect(screen.getByTestId('element-silk-outline')).toBeInTheDocument()
   })
 
   it('selects an element in part creator mode', () => {
@@ -28,7 +28,7 @@ describe('PcbCanvas state-driven behavior', () => {
 
     // THT connectors appear in all copper groups; pick the instance inside the copper1 layer group
     const copper1Group = screen.getByTestId('layer-group-copper1')
-    const target = copper1Group.querySelector('[data-testid="element-copper0.connector0pin"]') as HTMLElement
+    const target = copper1Group.querySelector('[data-testid="element-connector0pin"]') as HTMLElement
     expect(target).not.toBeNull()
     fireEvent.pointerDown(target, { pointerId: 1, clientX: 100, clientY: 100 })
 

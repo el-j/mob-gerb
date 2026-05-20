@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('@headed double-tap a routed trace to enter edit mode and run DRC', async ({ page }) => {
+test('double-tap a routed trace to enter edit mode and run DRC', async ({ page }) => {
   await page.goto('/')
 
   // --- Setup: create two pads, connect, and autoroute ---
@@ -13,19 +13,19 @@ test('@headed double-tap a routed trace to enter edit mode and run DRC', async (
   await page.getByLabel('Pin').fill('1')
   await page.getByRole('button', { name: 'Tag Through-Hole Pad' }).click()
 
-  // Copy-paste to create Pad 2
+  // Copy-paste to create Pad 2 — pad1 is THT so it renders in both copper groups; use .last() for the copper0 instance on top
   await page.getByRole('button', { name: 'Clear Selection' }).click()
-  await pad1.click()
+  await pad1.last().click()
   await page.keyboard.press('Meta+c')
   await page.keyboard.press('Meta+v')
-  const pad2 = page.getByTestId('element-shape-2')
+  const pad2 = page.getByTestId('element-shape-2').last()
   await expect(pad2).toBeVisible()
   await page.getByLabel('Pin').fill('2')
   await page.getByRole('button', { name: 'Tag Through-Hole Pad' }).click()
 
   // Connect pads in Logical Mode
   await page.getByRole('button', { name: 'LOGICAL' }).click()
-  await pad1.click()
+  await pad1.last().click()
   await pad2.click()
   await expect(page.locator('line[stroke="#10b981"]')).toHaveCount(1)
 

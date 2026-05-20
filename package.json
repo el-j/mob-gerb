@@ -13,9 +13,9 @@
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:feature": "playwright test --grep-invert @smoke",
-    "test:e2e:noheaded": "playwright test --grep-invert @headed",
-    "test:e2e:headed": "playwright test --headed --debug --grep @headed",
-    "test:ci": "npm run lint && npm run build && npm run test && npm run test:e2e:noheaded"
+    "test:e2e:ci": "playwright test",
+    "test:e2e:headed": "playwright test --headed --debug",
+    "test:ci": "npm run lint && npm run build && npm run test && npm run test:e2e:ci"
   },
   "dependencies": {
     "jszip": "^3.10.1",

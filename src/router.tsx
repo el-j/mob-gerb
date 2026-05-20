@@ -24,4 +24,6 @@ export const router = createBrowserRouter([
       { path: 'docs', element: <DocsRoute /> },
     ],
   },
-])
+], {
+  basename: import.meta.env.BASE_URL,
+})

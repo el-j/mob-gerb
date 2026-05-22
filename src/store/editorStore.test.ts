@@ -42,6 +42,18 @@ describe('editor store project model', () => {
     expect(useEditorStore.getState().project.gridSize).toBe(2.54)
   })
 
+  it('defaults to mvp-grid routing strategy and allows selecting tscircuit prototype', () => {
+    const state = useEditorStore.getState()
+
+    expect(state.routingStrategy).toBe('mvp-grid')
+
+    state.setRoutingStrategy('tscircuit-prototype')
+    expect(useEditorStore.getState().routingStrategy).toBe('tscircuit-prototype')
+
+    state.setRoutingStrategy('mvp-grid')
+    expect(useEditorStore.getState().routingStrategy).toBe('mvp-grid')
+  })
+
   it('supports immutable history snapshots with undo and redo', () => {
     const state = useEditorStore.getState()
 

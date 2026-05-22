@@ -32,7 +32,7 @@ async function expectShellVisible(page: import('@playwright/test').Page) {
 
 // ─── mobile breakpoint ────────────────────────────────────────────────────────
 
-test.describe('@headed mobile breakpoint (390 × 844)', () => {
+test.describe('mobile breakpoint (390 × 844)', () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
   test('all editor shell controls are visible', async ({ page }) => {
@@ -72,16 +72,16 @@ test.describe('@headed mobile breakpoint (390 × 844)', () => {
     await page.getByRole('button', { name: 'Tag Through-Hole Pad' }).click()
 
     await page.getByRole('button', { name: 'Clear Selection' }).click()
-    await pad1.click()
+    await pad1.last().click()
     await page.keyboard.press('Meta+c')
     await page.keyboard.press('Meta+v')
-    const pad2 = page.getByTestId('element-shape-2')
+    const pad2 = page.getByTestId('element-shape-2').last()
     await expect(pad2).toBeVisible()
     await page.getByLabel('Pin').fill('2')
     await page.getByRole('button', { name: 'Tag Through-Hole Pad' }).click()
 
     await page.getByRole('button', { name: 'LOGICAL' }).click()
-    await pad1.click()
+    await pad1.last().click()
     await pad2.click()
 
     await page.getByRole('button', { name: /Autoroute Nets/ }).click()

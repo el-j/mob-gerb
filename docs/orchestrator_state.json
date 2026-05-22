@@ -4,6 +4,36 @@
   "blockedTasks": [],
   "completedTasks": [
     {
+      "id": "TSCI-005",
+      "title": "tscircuit CLI and AI Integration",
+      "path": ".claude/tscircuit-integration/PHASE5_CLI_AI_INTEGRATION.md",
+      "completedAt": "2026-05-20"
+    },
+    {
+      "id": "TSCI-004",
+      "title": "tscircuit Routing and Autolayout Integration",
+      "path": ".claude/tscircuit-integration/PHASE4_ROUTING_AUTOLAYOUT.md",
+      "completedAt": "2026-05-20"
+    },
+    {
+      "id": "TSCI-003",
+      "title": "tscircuit Registry Integration",
+      "path": ".claude/tscircuit-integration/PHASE3_REGISTRY_INTEGRATION.md",
+      "completedAt": "2026-05-20"
+    },
+    {
+      "id": "TSCI-002",
+      "title": "tscircuit Viewer Embedding",
+      "path": ".claude/tscircuit-integration/PHASE2_VIEWER_EMBEDDING.md",
+      "completedAt": "2026-05-20"
+    },
+    {
+      "id": "TSCI-001",
+      "title": "tscircuit Data Model Interop",
+      "path": ".claude/tscircuit-integration/PHASE1_DATA_MODEL.md",
+      "completedAt": "2026-05-20"
+    },
+    {
       "id": "TEST-002",
       "title": "Full Playwright and GitHub Actions",
       "path": "docs/backlog/tests/TEST-002_full-playwright-and-github-actions.md",
@@ -130,5 +160,5 @@
       "completedAt": "2026-05-19"
     }
   ],
-  "updatedAt": "2026-05-19"
+  "updatedAt": "2026-05-20"
 }

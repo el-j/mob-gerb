@@ -81,4 +81,34 @@ describe('App integration', () => {
     await user.click(screen.getByRole('button', { name: '1:1' }))
     expect(screen.getByText('100%')).toBeInTheDocument()
   })
+
+  it('opens tscircuit preview panel with live element summary', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Show tscircuit preview' }))
+
+    expect(screen.getByRole('region', { name: 'tscircuit preview panel' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'PCB' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Schematic' })).toBeInTheDocument()
+    expect(screen.getByTestId('tscircuit-preview-body')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Import from tscircuit registry' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Download registry publish payload' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Download tscircuit CLI script' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Generate AI footprint prompt' })).toBeInTheDocument()
+  })
+
+  it('allows selecting tscircuit routing strategy in logical mode', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'LOGICAL' }))
+
+    const strategy = screen.getByRole('combobox', { name: 'Routing strategy' })
+    expect(strategy).toBeInTheDocument()
+    expect(strategy).toHaveValue('mvp-grid')
+
+    await user.selectOptions(strategy, 'tscircuit-prototype')
+    expect(strategy).toHaveValue('tscircuit-prototype')
+  })
 })

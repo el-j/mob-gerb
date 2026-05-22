@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('@headed creates an airwire between two pads in logical mode', async ({ page }) => {
+test('creates an airwire between two pads in logical mode', async ({ page }) => {
   await page.goto('/')
 
   // Step 1: Create two pads in Part Creator Mode
@@ -18,14 +18,14 @@ test('@headed creates an airwire between two pads in logical mode', async ({ pag
   // Clear selection
   await page.getByRole('button', { name: 'Clear Selection' }).click()
 
-  // Copy Pad 1 to Pad 2
-  await pad1.click()
+  // Copy Pad 1 to Pad 2 — pad1 is THT so it renders in both copper groups; use .last() for the topmost (copper0) instance
+  await pad1.last().click()
   await page.keyboard.press('Control+c')
   await page.keyboard.press('Meta+c')
   await page.keyboard.press('Control+v')
   await page.keyboard.press('Meta+v')
 
-  const pad2 = page.getByTestId('element-shape-2')
+  const pad2 = page.getByTestId('element-shape-2').last()
   await expect(pad2).toBeVisible()
 
   // Tag Pad 2
@@ -36,9 +36,9 @@ test('@headed creates an airwire between two pads in logical mode', async ({ pag
   await page.getByRole('button', { name: 'LOGICAL' }).click()
 
   // Step 3: Create the connection
-  // Click Pad 1 to start connection
-  await pad1.click()
-  
+  // Click Pad 1 to start connection (THT pad — appears in multiple groups; use .last() for copper0 instance on top)
+  await pad1.last().click()
+
   // Click Pad 2 to complete connection
   await pad2.click()
 

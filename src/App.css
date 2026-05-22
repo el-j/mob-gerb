@@ -309,6 +309,99 @@ p {
   font-size: 0.8rem;
 }
 
+.tsc-preview-anchor {
+  position: absolute;
+  left: 1rem;
+  top: 9.5rem;
+  z-index: 12;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.tsc-preview-toggle {
+  min-height: 2rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.tsc-preview-panel {
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: min(58vh, 38rem);
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.6rem;
+  border-color: var(--color-pcb-border-strong);
+  background: rgba(13, 20, 30, 0.92);
+}
+
+.tsc-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+}
+
+.tsc-preview-tabs {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.tsc-preview-tabs .ui-btn {
+  min-height: 1.9rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+}
+
+.tsc-preview-body {
+  border: 1px solid var(--color-pcb-border);
+  border-radius: 0.6rem;
+  background: rgba(6, 10, 16, 0.82);
+  padding: 0.5rem;
+  overflow: auto;
+}
+
+.tsc-preview-note {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--color-pcb-text-muted);
+}
+
+.tsc-preview-json {
+  margin: 0.5rem 0 0;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: #b8cadf;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tsc-registry-actions {
+  display: grid;
+  gap: 0.45rem;
+  border-top: 1px solid rgba(53, 81, 111, 0.55);
+  padding-top: 0.55rem;
+}
+
+.tsc-registry-field {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.7rem;
+  color: var(--color-pcb-text-muted);
+}
+
+.tsc-registry-field .ui-input {
+  min-height: 1.9rem;
+  padding: 0 0.4rem;
+}
+
+.tsc-ai-prompt {
+  min-height: 9rem;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  resize: vertical;
+}
+
 .app-footer {
   display: flex;
   justify-content: space-between;
@@ -370,6 +463,20 @@ a {
     top: 4rem;
     right: 0.5rem;
     padding: 0.35rem 0.6rem;
+  }
+
+  .tsc-preview-anchor {
+    left: 0.5rem;
+    right: 0.5rem;
+    top: auto;
+    bottom: 30vh;
+    z-index: 11;
+  }
+
+  .tsc-preview-panel {
+    width: 100%;
+    max-height: 28vh;
+    padding: 0.6rem;
   }
 
   .pcb-minimap-container {

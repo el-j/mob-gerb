@@ -4,6 +4,11 @@ import { generateGerberOutput } from './gerberExporter'
 
 export { generateGerberOutput } from './gerberExporter'
 export type { GerberOutput } from './gerberExporter'
+export {
+  exportProjectToTscircuitCircuitJson,
+  exportProjectToTscircuitCircuitJsonString,
+  type TscircuitCircuitElement,
+} from './tscircuitExporter'
 
 /**
  * Generates Gerber + Excellon files from the project and triggers a ZIP download.

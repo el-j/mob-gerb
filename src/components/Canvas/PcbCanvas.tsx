@@ -687,7 +687,7 @@ export const PcbCanvas = () => {
           )}
           <circle
             id={element.connector?.svgId ?? element.id}
-            data-testid={`element-${element.pcbLayer}.${element.id}`}
+            data-testid={`element-${element.id}`}
             data-selected={selected ? 'true' : 'false'}
             data-role={element.role}
             data-layer={element.pcbLayer}
@@ -727,7 +727,7 @@ export const PcbCanvas = () => {
           )}
           <rect
             id={element.connector?.svgId ?? element.id}
-            data-testid={`element-${element.pcbLayer}.${element.id}`}
+            data-testid={`element-${element.id}`}
             data-selected={selected ? 'true' : 'false'}
             data-role={element.role}
             data-layer={element.pcbLayer}
@@ -766,7 +766,7 @@ export const PcbCanvas = () => {
           )}
           <polygon
             id={element.connector?.svgId ?? element.id}
-            data-testid={`element-${element.pcbLayer}.${element.id}`}
+            data-testid={`element-${element.id}`}
             data-selected={selected ? 'true' : 'false'}
             data-role={element.role}
             data-layer={element.pcbLayer}
@@ -789,7 +789,7 @@ export const PcbCanvas = () => {
       return (
         <g
           key={element.id}
-          data-testid={`element-${element.pcbLayer}.${element.id}`}
+          data-testid={`element-${element.id}`}
           data-selected={selected ? 'true' : 'false'}
           data-role={element.role}
           data-layer={element.pcbLayer}
@@ -837,7 +837,7 @@ export const PcbCanvas = () => {
     return (
       <g
         key={element.id}
-        data-testid={`element-${element.pcbLayer}.${element.id}`}
+        data-testid={`element-${element.id}`}
         data-selected={selected ? 'true' : 'false'}
         data-role={element.role}
         data-layer={element.pcbLayer}

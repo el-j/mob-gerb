@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('@headed supports free draw, selection visibility, style edits, and quick 1:1 reset', async ({ page }) => {
+test('supports free draw, selection visibility, style edits, and quick 1:1 reset', async ({ page }) => {
   await page.goto('/')
 
   await page.getByRole('button', { name: 'PART CREATOR' }).click()

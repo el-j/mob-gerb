@@ -4,11 +4,13 @@ import { useEditorStore } from '../../store/editorStore'
 export const RoutingModePanel = () => {
   const isRouting = useEditorStore((state) => state.isRouting)
   const nets = useEditorStore((state) => state.project.nets)
+  const routingStrategy = useEditorStore((state) => state.routingStrategy)
   const drcViolations = useEditorStore((state) => state.drcViolations)
   const drcClearanceMm = useEditorStore((state) => state.drcClearanceMm)
   const triggerAutoroute = useEditorStore((state) => state.triggerAutoroute)
   const runDrc = useEditorStore((state) => state.runDrc)
   const setDrcClearance = useEditorStore((state) => state.setDrcClearance)
+  const setRoutingStrategy = useEditorStore((state) => state.setRoutingStrategy)
 
   const hasNets = Object.keys(nets).length > 0
 
@@ -43,6 +45,18 @@ export const RoutingModePanel = () => {
         </div>
 
         <div className="tag-row flex-wrap items-center mt-1">
+          <label className="flex items-center gap-1 text-xs">
+            Strategy
+            <select
+              className="ui-input w-40"
+              aria-label="Routing strategy"
+              value={routingStrategy}
+              onChange={(event) => setRoutingStrategy(event.target.value as 'mvp-grid' | 'tscircuit-prototype')}
+            >
+              <option value="mvp-grid">MVP Grid</option>
+              <option value="tscircuit-prototype">tscircuit Prototype</option>
+            </select>
+          </label>
           <label className="flex items-center gap-1 text-xs">
             Clearance
             <input

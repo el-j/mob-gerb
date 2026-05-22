@@ -1,19 +1,14 @@
 {
   "baseBranch": "main",
-  "openTasks": [
+  "openTasks": [],
+  "blockedTasks": [],
+  "completedTasks": [
     {
       "id": "TSCI-005",
       "title": "tscircuit CLI and AI Integration",
-      "path": ".claude/tscircuit-integration/ORCHESTRATOR.md",
-      "category": "feature",
-      "status": "ready",
-      "dependsOn": [
-        "TSCI-004"
-      ]
-    }
-  ],
-  "blockedTasks": [],
-  "completedTasks": [
+      "path": ".claude/tscircuit-integration/PHASE5_CLI_AI_INTEGRATION.md",
+      "completedAt": "2026-05-20"
+    },
     {
       "id": "TSCI-004",
       "title": "tscircuit Routing and Autolayout Integration",

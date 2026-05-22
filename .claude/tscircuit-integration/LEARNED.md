@@ -14,5 +14,7 @@
 - Registry responses may wrap `circuit-json` in different keys (`circuitJson`, `circuit_json`, `data`, nested objects); import adapters should normalize these shapes before parsing.
 - Routing workers should use deterministic route IDs and deterministic net ordering so Playwright and regression checks can assert concrete outputs across repeated runs.
 - Strategy toggles can be integrated as typed worker request fields first, then upgraded to true engine swaps later without breaking UI/store contracts.
+- Browser-based tooling should generate deterministic external artifacts (shell scripts and AI prompts) instead of attempting direct local CLI execution from UI runtime.
+- AI prompt generation is more reusable when it includes explicit output constraints, millimeter-space reminder, and a bounded circuit-json snapshot.
 
 (Keep updating as each phase completes.)

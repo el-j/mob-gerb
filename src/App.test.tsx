@@ -94,6 +94,8 @@ describe('App integration', () => {
     expect(screen.getByTestId('tscircuit-preview-body')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Import from tscircuit registry' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Download registry publish payload' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Download tscircuit CLI script' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Generate AI footprint prompt' })).toBeInTheDocument()
   })
 
   it('allows selecting tscircuit routing strategy in logical mode', async () => {

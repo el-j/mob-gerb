@@ -23,8 +23,8 @@ Enable mob-gerb to leverage tscircuit’s advanced EDA capabilities, registry, a
 - [x] Prototype using tscircuit’s routing as a mob-gerb worker.
 
 ### Phase 5: CLI, AI, and Advanced Flows
-- [ ] Integrate tscircuit CLI for batch export, registry, and AI flows.
-- [ ] Prototype AI-driven part/footprint generation in mob-gerb via tscircuit.
+- [x] Integrate tscircuit CLI for batch export, registry, and AI flows.
+- [x] Prototype AI-driven part/footprint generation in mob-gerb via tscircuit.
 
 ## Deliverables
 - Interop/conversion utilities

@@ -31,6 +31,7 @@
 - Task 2 (Viewer Embedding): completed.
 - Task 3 (Registry Integration): completed.
 - Task 4 (Routing/Autolayout): completed.
+- Task 5 (CLI/AI Integration): completed.
 - Completed in Task 1:
    - mob-gerb core model inventory
    - tscircuit `circuit-json` schema inventory
@@ -44,4 +45,4 @@
    - optional dynamic loading for tscircuit viewers with fallback rendering
    - app integration tests and quality gates
 - Next active task:
-   - Task 5 (CLI/AI Integration)
+   - None (all tscircuit integration phases complete)

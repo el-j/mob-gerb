@@ -3,6 +3,10 @@ import { useMemo, useState } from 'react'
 
 import { exportProjectToTscircuitCircuitJson } from '../../core/exporters'
 import {
+  createAiFootprintPrompt,
+  createTscircuitCliScript,
+} from '../../core/integrations/tscircuitCliAi'
+import {
   createRegistryPublishPayload,
   fetchRegistryCircuitJson,
   importProjectFromRegistryCircuitJson,
@@ -59,6 +63,8 @@ export const TscircuitPreviewPanel = () => {
   const [activeTab, setActiveTab] = useState<'pcb' | 'schematic'>('pcb')
   const [registrySpec, setRegistrySpec] = useState('')
   const [publishName, setPublishName] = useState('')
+  const [aiGoal, setAiGoal] = useState('')
+  const [aiPrompt, setAiPrompt] = useState('')
   const [registryBusy, setRegistryBusy] = useState(false)
   const [registryStatus, setRegistryStatus] = useState<string | null>(null)
   const [viewerState, setViewerState] = useState<ViewerState>({
@@ -107,6 +113,39 @@ export const TscircuitPreviewPanel = () => {
     anchor.click()
     URL.revokeObjectURL(url)
     setRegistryStatus('Publish payload downloaded. Use tscircuit CLI/API to submit.')
+  }
+
+  const handleDownloadCliScript = () => {
+    const packageName = publishName.trim() || project.projectId
+    const script = createTscircuitCliScript(project, { packageName })
+    const blob = new Blob([script], { type: 'text/x-shellscript' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `${packageName.replace(/[^a-zA-Z0-9._-]/g, '_')}.tscircuit.publish.sh`
+    anchor.click()
+    URL.revokeObjectURL(url)
+    setRegistryStatus('CLI publish script downloaded.')
+  }
+
+  const handleGenerateAiPrompt = () => {
+    const prompt = createAiFootprintPrompt(project, aiGoal)
+    setAiPrompt(prompt)
+    setRegistryStatus('AI footprint prompt generated.')
+  }
+
+  const handleCopyAiPrompt = async () => {
+    if (!aiPrompt) {
+      setRegistryStatus('Generate an AI prompt first.')
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(aiPrompt)
+      setRegistryStatus('AI prompt copied to clipboard.')
+    } catch {
+      setRegistryStatus('Copy failed; use the prompt text area manually.')
+    }
   }
 
   const ActiveViewer = activeTab === 'pcb' ? viewerState.pcbViewer : viewerState.schematicViewer
@@ -206,6 +245,51 @@ export const TscircuitPreviewPanel = () => {
             >
               Download Publish Payload
             </button>
+            <button
+              className="ui-btn"
+              type="button"
+              onClick={handleDownloadCliScript}
+              aria-label="Download tscircuit CLI script"
+            >
+              Download CLI Script
+            </button>
+
+            <label className="tsc-registry-field">
+              AI footprint goal
+              <input
+                className="ui-input"
+                type="text"
+                value={aiGoal}
+                onChange={(event) => setAiGoal(event.target.value)}
+                placeholder="e.g. make this footprint compact and hand-solderable"
+                aria-label="AI footprint goal"
+              />
+            </label>
+            <button
+              className="ui-btn"
+              type="button"
+              onClick={handleGenerateAiPrompt}
+              aria-label="Generate AI footprint prompt"
+            >
+              Generate AI Prompt
+            </button>
+            <button
+              className="ui-btn"
+              type="button"
+              onClick={handleCopyAiPrompt}
+              aria-label="Copy AI footprint prompt"
+            >
+              Copy AI Prompt
+            </button>
+
+            {aiPrompt ? (
+              <textarea
+                className="ui-input tsc-ai-prompt"
+                aria-label="Generated AI footprint prompt"
+                value={aiPrompt}
+                readOnly
+              />
+            ) : null}
 
             {registryStatus ? <p className="tsc-preview-note">{registryStatus}</p> : null}
           </div>

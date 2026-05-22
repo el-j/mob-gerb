@@ -395,6 +395,13 @@ p {
   padding: 0 0.4rem;
 }
 
+.tsc-ai-prompt {
+  min-height: 9rem;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  resize: vertical;
+}
+
 .app-footer {
   display: flex;
   justify-content: space-between;
